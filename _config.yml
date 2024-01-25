@@ -128,3 +128,12 @@ search:
   field: post
   content: true
   template: ./search.xml
+
+kramed:
+  gfm: true
+  pedantic: false
+  sanitize: false
+  tables: true
+  breaks: true
+  smartLists: true
+  smartypants: true

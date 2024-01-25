@@ -5,7 +5,6 @@ updated:
 tags:
     - Bug
 categories: Note
-conver: https://pic1.zhimg.com/80/v2-80baa49adeae8dc18ce5779731989a84_720w.png
 ---
 
 在使用Flask-Sockets进行WebSocket连接时，一些用户可能会遇到如下错误信息：werkzeug.routing.WebsocketMismatch: 400 Bad Request: The browser (or proxy) sent a request that this server could not understand.

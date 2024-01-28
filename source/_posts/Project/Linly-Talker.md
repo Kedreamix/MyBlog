@@ -7,6 +7,7 @@ tags:
     - Talking Head Generation
 categories: Project
 cover: https://pic1.zhimg.com/80/v2-2ae8c11c1aae13ac400d5589124377b9_720w.png
+swiper_index: 4 #置顶轮播图顺序，非负整数，数字越大越靠前
 ---
 
 **2023.12 更新** 📆

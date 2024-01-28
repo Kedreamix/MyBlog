@@ -10,6 +10,7 @@ categories: Paper
 keywords: Awesome-Talking-Head-Synthesis
 description: 超赞的数字人生成知识库  Awesome-Talking-Head-Synthesis
 cover: https://picx.zhimg.com/70/v2-de8deb9ec70dc554000936e71b7e907a.jpg
+swiper_index: 3 #置顶轮播图顺序，非负整数，数字越大越靠前
 ---
 
 Gihub：https://github.com/Kedreamix/Awesome-Talking-Head-Synthesis

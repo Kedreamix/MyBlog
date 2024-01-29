@@ -14,14 +14,12 @@
   "dependencies": {
     "gulp": "^4.0.2",
     "gulp-htmlmin": "^5.0.1",
-    "gulp-imagemin": "^9.0.0",
     "gulp-minify-css": "^1.2.4",
     "gulp-uglify": "^3.0.2",
     "hexo": "^7.0.0",
     "hexo-butterfly-charts": "^1.1.6",
     "hexo-butterfly-swiper": "^1.0.12",
     "hexo-deployer-git": "^4.0.0",
-    "hexo-filter-gitcalendar": "^1.0.11",
     "hexo-filter-github-emojis": "^3.0.5",
     "hexo-generator-archive": "^2.0.0",
     "hexo-generator-category": "^2.0.0",
@@ -36,7 +34,6 @@
     "hexo-renderer-pug": "^3.0.0",
     "hexo-renderer-stylus": "^3.0.1",
     "hexo-server": "^3.0.0",
-    "hexo-theme-landscape": "^1.0.0",
     "hexo-wordcount": "^6.0.1"
   },
   "devDependencies": {

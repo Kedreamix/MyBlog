@@ -8,9 +8,9 @@ tags:
     - NeRF
 categories: Paper
 keywords: Awesome-Talking-Head-Synthesis
-description: 超赞的数字人生成知识库  Awesome-Talking-Head-Synthesis
+description: 超赞的数字人生成知识库  Awesome-Talking-Head-Synthesis， 这份资源库整理了与生成对抗网络(GAN)和神经辐射场(NeRF)相关的论文、代码和资源,重点关注基于图像和音频的虚拟讲话头合成论文及已发布代码。如果您觉得这个仓库有用,请star⭐支持!
 cover: https://picx.zhimg.com/70/v2-de8deb9ec70dc554000936e71b7e907a.jpg
-swiper_index: 3 #置顶轮播图顺序，非负整数，数字越大越靠前
+swiper_index: 2 #置顶轮播图顺序，非负整数，数字越大越靠前
 ---
 
 Gihub：https://github.com/Kedreamix/Awesome-Talking-Head-Synthesis

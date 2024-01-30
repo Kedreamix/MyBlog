@@ -5,8 +5,8 @@ updated:
 tags:
     - CUDA
 categories: CUDA
-keywords:
-description:
+keywords: 
+description: 接下来再进行一个实践，根据pytorch官网的一个[应用扩展文档](https://pytorch.org/tutorials/advanced/cpp_extension.html#)来一起来实现这个LLTM的神经网络的实现，这是官方对应的代码 https://github.com/pytorch/extension-cpp。 首先介绍一下，假设有一种新的循环单元，这个循环单元类似于 LSTM，但不同之处在于它没有遗忘门，并使用指数线性单元 ([ELU](https://so.csdn.net/so/search?q=ELU&spm=1001.2101.3001.7020)) 作为其内部激活函数。因为这个单元能够记忆很久，我们称之为 LLTM，或 Long-Long-Term-Memory 单元。
 top_img:
 comments:
 cover: https://pic1.zhimg.com/80/v2-5328b2df743543e0ca21d09eeaf45c28_1440w.jpeg

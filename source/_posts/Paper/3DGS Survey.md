@@ -9,7 +9,7 @@ categories: Note
 cover: https://picx.zhimg.com/80/v2-2ebb7a7fb8548ff7a8e30bc62e875ebe.png
 description: 3DGS综述以及对3DGS的理解：A Survey on 3D Gaussian Splatting 今天想介绍的是`ZJU`带来的`3DGS`的首篇综述`A Survey on 3D Gaussian Splatting` 
 mathjax: true
-swiper_index: 1 #置顶轮播图顺序，非负整数，数字越大越靠前
+swiper_index: 5 #置顶轮播图顺序，非负整数，数字越大越靠前
 ---
 
 

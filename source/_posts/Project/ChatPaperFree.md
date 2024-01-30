@@ -6,8 +6,8 @@ tags:
     - Google
 categories: Project 
 cover: https://pic1.zhimg.com/80/v2-e127b4c88f3c1dae17604827851af750_720w.png?source=d16d100b
-swiper_index: 2 #置顶轮播图顺序，非负整数，数字越大越靠前
-description: ChatPaperFree是一个基于ChatGPT的自动论文摘要生成器，在ChatPaper的基础上进行的更新，采用了最近由Google开源的Gemini Pro大模型。
+description: ChatPaperFree是一个基于ChatGPT的自动论文摘要生成器，在ChatPaper的基础上进行的更新，采用了最近由Google开源的Gemini Pro大模型。目前,我们能够对用户输入的论文进行自动总结。未来,我还计划加入对论文图片/表格/公式的识别 extraction,从而生成更全面而易读的总结。
+swiper_index: 1 #置顶轮播图顺序，非负整数，数字越大越靠前
 ---
 
 

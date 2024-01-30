@@ -5,9 +5,9 @@ updated:
 tags:
     - CUDA
 categories: CUDA
-keywords:
-description:
-top_img:
+keywords: 
+description: 虽然说PyTorch提供了丰富的与神经网络、张量代数、数据处理等相关的操作，但是有时候你可能需要**更定制化的操作**，比如使用论文中的新型激活函数，或者实现作为研究一部分开发的操作。在PyTorch中，最简单的集成自定义操作的方式是在Python中编写，通过扩展Function和Module来实现，
+top_img: 
 comments:
 cover: https://picx.zhimg.com/80/v2-dd72e374ab099a8115894f5247afb51f_720w.png
 toc:
@@ -24,6 +24,7 @@ aplayer:
 highlight_shrink:
 aside:
 abcjs:
+swiper_index: 4
 ---
 
 视频资料： 
@@ -568,7 +569,7 @@ __global__ void trilinear_fw_kernel(
 
 ### foward验证与比较
 
-经过`python setup.py install`以后（每次修改后都要重新运行`setup.py`），我们就可以进行运行了，在这里面为了验证结果的正确性和与python进行比较，用python实现三线性插值的算法，比较两者的结果和时间效率，`test.py`如下：
+经过`python setup.py install`以后（每次修改后都要重新运行`setup.py`），我们就可以进行运行了，在这里面为了验证结果的正确性和与python进行比较，用python实现三线性插值的算法，比较两者的结果和时间效率，`test.py`如下：
 
 ```python
 import torch

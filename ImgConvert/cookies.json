@@ -1,0 +1,22 @@
+{
+  "default_modes": ["csdn"],
+  "total_modes" : ["zhihu", "csdn", "bili", "jianshu", "bokeyuan"],
+  "csdn_cookies" : {
+    "UserName": "weixin_45508265",
+    "UserToken": "9d55e499c3dd4a7b956dc923f65b3494"
+  },
+  "zhihu_cookies": {
+    "z_c0": "2|1:0|10:1705736519|4:z_c0|80:MS4xellDTEVnQUFBQUFtQUFBQVlBSlZUZmZHbUdhd3ZqM21CSFZ5eWwtQW1WbzNHY0NyVE9DcmpnPT0=|2d5ce6ed16829f2ea65c16ec29b43f1a1f6384ab95e97af66dd78d3459aa5e74"
+  },
+  "bili_cookies": {
+    "bili_jct": "d3a60a0951cd9df0889f477e2169f52c",
+    "SESSDATA": "9c2a41c3%2C1721580175%2C12d54%2A12CjDKCa33a38FA1nl5zgBsJhFDcqflJ0rfM5Mln1hgzxEuzx8rLKElIt4GnPM9pAKXjYSVkp0bVJSVFFoOXJQMC04VmQyMHhWU2dyc1Bibm5zWXZsRTJ2a3ctY3A3dGNJWE1DSFdsOG5FVVlzVlZuUnJkMlBhaWpEY0l5ZGdYWXM0eER4aWMxSkl3IIEC"
+  },
+  "jianshu_cookies": {
+    "remember_user_token": "W1syNjI0MDI0NF0sIiQyYSQxMSRFYnd3cHMzZy4yUnB2aWJNOUtVUDZPIiwiMTcwNTczODk4Ni40Mjg3NDg2Il0%3D--0e5430fc66bc4f3fadade993e344f3af9fb27c37",
+    "_m7e_session_core": "370b141af32c51967598ed579ae5e2ce"
+  },
+  "bokeyuan_cookies": {
+    ".Cnblogs.AspNetCore.Cookies": "CfDJ8DZoAyJmInJHoSwqM1IbzdTd1m25aUdsa44ZrJNXvz5dLPE85u2evqaZbel4WlMTM1stPtMZ3bdeyZBPdyXrIdSu0Rw1jGTzOWjqRTj6uYiIK0HjE7obrNcbHPKYS0cwmOxUuePGxqJFSxCHlEamlwwQKtaxjuG78Ikuz86xRIGwwqYLqeSBML5X8Co"
+  }
+}

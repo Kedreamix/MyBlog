@@ -232,8 +232,9 @@ def img_convert(mode, text, root, link=False):
 
     else:
         res_text = ''
-        with open('example.md', 'r', encoding='utf-8') as f:
-            res_text += f.read()
+        if os.path.exists('example.md'):
+            with open('example.md', 'r', encoding='utf-8') as f:
+                res_text += f.read()
         last_end = 0
         for query in re.finditer(Setting_config.pattern, text, re.I):
             src = query.group()[2:-1]

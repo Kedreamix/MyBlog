@@ -75,7 +75,10 @@
       link: https://www.1ppt.com/moban/
       avatar: https://pic1.zhimg.com/80/v2-705e6ff99f4cf08069fc9221b5761bda.png
       descr: 中文PPT模板
-        
+    - name: CCF DDL
+      link: https://ccfddl.github.io
+      avatar: https://picx.zhimg.com/80/v2-58fc4e514740aa924353f30e6f5c8383.jpeg
+      descr: CCF Rec. Conference Deadlines
 
 # - class_name: 网站
 #   class_desc: 值得推荐的网站

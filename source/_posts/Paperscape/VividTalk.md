@@ -28,7 +28,7 @@ Code    : [https://github.com/HumanAIGC/VividTalk](https://github.com/HumanAIGC/
 - VividTalk 在第二阶段使用双分支运动-VAE 和生成器将网格转换为密集运动并逐帧合成高质量视频。
 - 广泛的实验表明，与目前最先进的作品相比，VividTalk 可以生成高质量视觉效果的说话人头部视频，并将唇形同步和逼真的增强效果提高很大幅度。
 
-
+![VividTalk can generate realistic and lip-sync talking head videos with expressive facial expression, natural head poses.](https://picx.zhimg.com/80/v2-8521b04f82075cc27b5e95148dba9792.png)
 
 
 

@@ -38,3 +38,6 @@ aside	【可选】显示侧边栏 (默认 true)
 aplayer	【可选】在需要的页面加载aplayer的js和css,请参考文章下面的音乐 配置
 highlight_shrink	【可选】配置代码框是否展开 (true/false) (默认为设置中highlight_shrink的配置)
 random	【可选】配置友情链接是否随机排序（默认为 false) -->
+
+
+

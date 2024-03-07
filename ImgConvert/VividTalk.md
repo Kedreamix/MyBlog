@@ -1,36 +1,3 @@
----
-title: VividTalk One-Shot Audio-Driven Talking Head Generation Based on 3D Hybrid Prior
-date: 2024-03-05 15:31
-updated:
-tags:
-    - NeRF
-    - Talking Head Generation
-categories: Paperscape
-keywords: 
-description:
-top_img: 
-comments:
-cover: https://picx.zhimg.com/80/v2-8521b04f82075cc27b5e95148dba9792.png
-toc:
-toc_number:
-toc_style_simple:
-copyright:
-copyright_author:
-copyright_author_href:
-copyright_url:
-copyright_info:
-mathjax:
-katex:
-aplayer:
-highlight_shrink:
-aside:
-abcjs:
----
-
-
-
-
-
 # VividTalk: One-Shot Audio-Driven Talking Head Generation Based on 3D Hybrid Prior
 
 
@@ -61,7 +28,7 @@ Code    : [https://github.com/HumanAIGC/VividTalk](https://github.com/HumanAIGC/
 - VividTalk 在第二阶段使用双分支运动-VAE 和生成器将网格转换为密集运动并逐帧合成高质量视频。
 - 广泛的实验表明，与目前最先进的作品相比，VividTalk 可以生成高质量视觉效果的说话人头部视频，并将唇形同步和逼真的增强效果提高很大幅度。
 
-![VividTalk can generate realistic and lip-sync talking head videos with expressive facial expression, natural head poses.](https://picx.zhimg.com/80/v2-8521b04f82075cc27b5e95148dba9792.png)
+
 
 
 
@@ -221,4 +188,5 @@ VividTalk框架的优点包括：
 5. **创新的双分支机制**：利用双分支运动-VAE和生成器，VividTalk能够有效地转化驱动网格为密集运动，并用于合成最终视频，提高了生成视频的质量和真实感。
 
 6. **超越性能**：实验证明，VividTalk优于以往的最先进方法，为数字人类创建、视频会议等应用开辟了新的可能性。
+
 

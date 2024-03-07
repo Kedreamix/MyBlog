@@ -1,3 +1,34 @@
+---
+title: EMO Emote Portrait Alive - 阿里HumanAIGC
+date: 2024-03-03 21:20
+updated:
+tags:
+    - Diffusion Models
+    - Talking Head Generation
+categories: Paperscape
+keywords: 
+description:
+top_img: https://pica.zhimg.com/v2-24facf74c8152c3d19d0e57fce19c9b2.png
+comments:
+cover: https://picx.zhimg.com/v2-6492e24fb03ffa98135dc584535ab7d9.png
+toc:
+toc_number:
+toc_style_simple:
+copyright:
+copyright_author:
+copyright_author_href:
+copyright_url:
+copyright_info:
+mathjax:
+katex:
+aplayer:
+highlight_shrink:
+aside:
+abcjs:
+---
+
+
+
 # EMO: Emote Portrait Alive - 阿里HumanAIGC
 
 最近这一个星期，也就是2月28日的时候，阿里巴巴的HumanAIGC团队发布了一款全新的生成式AI模型EMO（Emote Portrait Alive）。EMO仅需一张人物肖像照片和音频，就可以让照片中的人物按照音频内容“张嘴”唱歌、说话，且口型基本一致，面部表情和头部姿态非常自然，发布的视频效果非常好，好的几乎难以置信，特别是蔡徐坤唱rap的第一段，效果非常好。
@@ -34,7 +65,7 @@
 
 接下来开始剖析一下EMO的框架，与DiffTalk和Diffusion Heads类似，都是利用Diffusion来生成，也是根据一个参考图像来逐帧生成图片最后得到视频。
 
-![](https://img.huxiucdn.com/article/content/202402/29/040803346667.png?imageView2/2/w/1000/format/png/interlace/1/q/85)
+![EMO](https://pica.zhimg.com/v2-24facf74c8152c3d19d0e57fce19c9b2.png)
 
 不同的是，EMO的工作过程分为两个主要阶段：
 
@@ -45,7 +76,7 @@
 
 根据EMO的论文与项目的展现的结果，EMO不仅仅能产生非常Amazing的对口型视频，还能生成各种风格的歌唱视频，无论是在表现力还是真实感方面都显著优于现有的先进方法，如DreamTalk、Wav2Lip和SadTalker。
 
-![image-20240305095344719](https://picx.zhimg.com/v2-6492e24fb03ffa98135dc584535ab7d9.png)
+![EMO整体框架](https://picx.zhimg.com/v2-6492e24fb03ffa98135dc584535ab7d9.png)
 
 ## EMO工作原理
 
@@ -139,3 +170,4 @@ EMO模型有如下特点：
 参考
 
 - [https://m.huxiu.com/article/2728417.html](https://m.huxiu.com/article/2728417.html)
+

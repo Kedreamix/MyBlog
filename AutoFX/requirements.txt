@@ -1,0 +1,4 @@
+PyMuPDF==1.18.14
+Pillow==8.4.0
+beautifulsoup4==4.9.3
+scikit-image==0.17.2

@@ -7,5 +7,10 @@ node_modules/
 public/
 .deploy*/
 _multiconfig.yml
-AutoFX/
+# AutoFX/
+AutoFX/.history/
+AutoFX/arxiv/
+AutoFX/Arxiv-Search/
+AutoFX/temp/
+AutoFX/paperparse/ppyolov2_r50vd_dcn_365e_publaynet
 PicConvert/*.md

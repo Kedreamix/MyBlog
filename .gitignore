@@ -12,5 +12,6 @@ AutoFX/.history/
 AutoFX/arxiv/
 AutoFX/Arxiv-Search/
 AutoFX/temp/
+AutoFX/paperparse/picodet_lcnet_x1_0_fgd_layout_infer
 AutoFX/paperparse/ppyolov2_r50vd_dcn_365e_publaynet
 PicConvert/*.md

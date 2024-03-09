@@ -235,7 +235,7 @@ $$
 
 这种方法通过肖像同步生成器产生更真实的细节并提高视觉质量。
 
-![image-20240307135412299](https://picx.zhimg.com/v2-421af4b4cfa489148de7fc8f4067427b.png)
+![比较](https://picx.zhimg.com/v2-421af4b4cfa489148de7fc8f4067427b.png)
 
 
 
@@ -308,7 +308,7 @@ $$
 
 音频-视觉编码器提供了主要的唇部同步信息，当替换此模块时，所有三个指标都变差，其中特别是LMD错误增加了21.15%，表明唇部动作同步减少，如图5（a）所示，显示出我们的音频-视觉编码器可以提取准确的唇部特征。
 
-![image-20240307150312550](https://pica.zhimg.com/v2-2fc44a31570aeacd6badcf909f669fdc.png)
+![Ablation Study](https://pica.zhimg.com/v2-2fc44a31570aeacd6badcf909f669fdc.png)
 
 用ER-NeRF 的**眨眼模块**替换**Facial Animation Capture**模块，这一部分会影响眉毛的运动和图像质量。
 

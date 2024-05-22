@@ -96,62 +96,6 @@ In this work, we tackle the challenge of enhancing the realism and expressivenes
 
 
 
-
-## G4G:A Generic Framework for High Fidelity Talking Face Generation with   Fine-grained Intra-modal Alignment
-
-**Authors:Juan Zhang, Jiahao Chen, Cheng Wang, Zhiwang Yu, Tangquan Qi, Di Wu**
-
-Despite numerous completed studies, achieving high fidelity talking face generation with highly synchronized lip movements corresponding to arbitrary audio remains a significant challenge in the field. The shortcomings of published studies continue to confuse many researchers. This paper introduces G4G, a generic framework for high fidelity talking face generation with fine-grained intra-modal alignment. G4G can reenact the high fidelity of original video while producing highly synchronized lip movements regardless of given audio tones or volumes. The key to G4G's success is the use of a diagonal matrix to enhance the ordinary alignment of audio-image intra-modal features, which significantly increases the comparative learning between positive and negative samples. Additionally, a multi-scaled supervision module is introduced to comprehensively reenact the perceptional fidelity of original video across the facial region while emphasizing the synchronization of lip movements and the input audio. A fusion network is then used to further fuse the facial region and the rest. Our experimental results demonstrate significant achievements in reenactment of original video quality as well as highly synchronized talking lips. G4G is an outperforming generic framework that can produce talking videos competitively closer to ground truth level than current state-of-the-art methods. 
-
-[PDF](http://arxiv.org/abs/2402.18122v1) 
-
-**Summary**
-深度学习领域亟需一个通用的高保真说话人脸生成框架，该框架具有良好的音频-图像跨模态对齐精度。
-
-**Key Takeaways**
-- 提出 G4G，一种用于高保真说话人脸生成的通用框架，可实现精细的模态内对齐。
-- G4G 使用对角矩阵增强音频图像模态内特征的常规对齐，显着增加了正负样本之间的比较学习。
-- 引入多尺度监督模块，以全面重现面部区域中原始视频的感知保真度，同时强调唇部动作与输入音频的同步。
-- 使用融合网络进一步融合面部区域和其他区域。
-- 实验结果表明，在重现原始视频质量和高度同步的说话嘴唇方面取得了显着成就。
-- G4G 是一种性能优异的通用框架，可以生成比当前最先进的方法更接近真实水平的说话视频。
-
-**[ChatPaperFree](https://huggingface.co/spaces/Kedreamix/ChatPaperFree)**
-
-<ol>
-<li>标题：G4G：一个用于高保真说话人脸生成和精细化模态内对齐的通用框架</li>
-<li>作者：Juan Zhang, Jiahao Chen, Cheng Wang, Zhiwang Yu, Tangquan Qi, Di Wu</li>
-<li>第一作者单位：长沙万兴科技股份有限公司</li>
-<li>关键词：说话人脸生成、模态内对齐、多尺度监督、融合网络</li>
-<li>论文链接：https://arxiv.org/abs/2402.18122</li>
-<li>摘要：
-(1) 研究背景：说话人脸生成旨在合成一个目标人物的高保真视频，其唇部动作与任意音频同步。尽管有许多研究，但要实现高保真说话人脸生成并使其唇部动作与任意音频高度同步仍然是一个重大挑战。
-(2) 过去方法：以往方法存在的问题主要在于：1）无法重现原始视频的高保真度；2）生成的唇部动作与音频不同步；3）生成的人脸视频保真度低。
-(3) 研究方法：本文提出了 G4G，这是一个用于高保真说话人脸生成和精细化模态内对齐的通用框架。G4G 采用对角矩阵来增强音频-图像模态内特征的普通对齐，显著增加了正负样本之间的比较学习。此外，还引入了一个多尺度监督模块，以全面重现原始视频在面部区域的感知保真度，同时强调唇部动作与输入音频的同步性。然后使用融合网络进一步融合面部区域和其他部分。
-(4) 性能：G4G 在重现原始视频质量和高度同步的说话人嘴唇方面取得了显著成就。实验结果表明，G4G 生成的说话人视频比当前最先进的方法更接近真实水平。</li>
-</ol>
-<p>7.Methods：
-(1)：提出G4G框架，采用对角矩阵增强音频-图像模态内特征对齐，增加正负样本比较学习；
-(2)：引入多尺度监督模块，重现原始视频面部区域感知保真度，强调唇部动作与音频同步；
-(3)：使用融合网络融合面部区域和其他部分。</p>
-<p><strong>8. 结论</strong>
-(1): 本工作提出了 G4G 框架，用于生成高保真且高度同步的说话人脸视频。该框架由两个关键组件组成：对角精细化对齐网络和多尺度监督自适应空间变换网络。这些组件协同工作，生成具有卓越保真度和多尺度细节的说话人脸视频。对角精细化对齐网络专门设计用于解决模态内和模态间对齐的挑战。通过保留源图像的面部身份、属性和丰富的纹理细节，我们的网络确保生成的视频与源角色高度相似。此对齐过程对于保持生成视频的真实性和视觉质量至关重要。多尺度监督自适应空间变换网络进一步增强了生成视频的保真度。通过对嘴形和头部姿势进行空间变形，我们的网络实现了嘴唇运动的非凡准确性和真实性。生成嘴唇运动与给定音频之间的这种同步水平明显超过了现有的人脸通用方法。大量实验表明，我们的 G4G 框架在保留角色身份、皮肤纹理和与真实情况高度相似的细节方面是有效的。此外，我们的方法在生成与任意给定音频相对应的、高度同步的嘴唇运动方面表现出色。这些结果优于现有人脸通用方法，突出了我们方法的优越性。虽然我们的 G4G 框架代表了说话人脸生成领域的重大进步，但我们认识到仍有挑战需要解决。例如，生成具有大头部姿势角度的视频以及处理快速变化的背景和光照条件仍然是持续的研究领域。我们正在积极应对这些挑战，并计划在不久的将来发布进一步的研究结果。总之，我们提出的 G4G 框架为生成高保真且高度同步的说话人脸视频提供了一种强大且有效的解决方案。通过保留角色身份、皮肤纹理和细节，我们的方法为包括娱乐、教育和医疗保健在内的各个领域的应用开辟了新的可能性。
-(2): <strong>创新点：</strong>
-* 提出对角精细化对齐网络，增强音频-图像模态内特征对齐，增加正负样本比较学习。
-* 引入多尺度监督自适应空间变换网络，重现原始视频面部区域感知保真度，强调唇部动作与音频同步。
-* 使用融合网络融合面部区域和其他部分。
-<strong>性能：</strong>
-* 在重现原始视频质量和高度同步的说话人嘴唇方面取得了显著成就。
-* 生成的说话人视频比当前最先进的方法更接近真实水平。
-<strong>工作量：</strong>
-* 模型复杂度和训练时间中等。</p>
-<details>
-  <summary>点此查看论文截图</summary>
-<img src="https://picx.zhimg.com/v2-e12c89676d8b67fdf727809d6024eb2f.jpg" align="middle">
-<img src="https://pic1.zhimg.com/v2-153d9657273ba05cfef190ef2e389848.jpg" align="middle">
-</details>
-
-
 ## Learning Dynamic Tetrahedra for High-Quality Talking Head Synthesis
 
 **Authors:Zicheng Zhang, Ruobing Zheng, Ziwen Liu, Congying Han, Tianqi Li, Meng Wang, Tiande Guo, Jingdong Chen, Bonan Li, Ming Yang**

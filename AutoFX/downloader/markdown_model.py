@@ -25,7 +25,7 @@ def chatpaper_summary(file, p=1, temperature=0.5):
     section_list = text.split(',')
     paper_list = [Paper(path=file, sl=section_list)]
     # 创建一个Reader对象
-    api_key_list = ['AIzaSyCEQAI0sXs8JWGuqcfjwsBj2YkPABEnkIE',
+    api_key_list = ['AIzaSyALrVIKu8GEMwQB1o8cqe5LZbgg7H3-a-A',
                     ]
     if random.random() < 0.5:
         api_key_list = api_key_list[::-1]

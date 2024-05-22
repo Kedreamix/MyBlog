@@ -14,7 +14,7 @@ threshold = 0.5
 enable_mkldnn = True
 enforce_cpu = True
 thread_num = 4
-GOOGLE_API_KEY = 'AIzaSyBdQdkgDbYAcjeTs-eB4Wog_CZCLhnJwFk'
+GOOGLE_API_KEY = 'AIzaSyALrVIKu8GEMwQB1o8cqe5LZbgg7H3-a-A'
 summary_prompt= '''User
     Ignore all previous instructions. You are a highly proficient researcher that can read and write properly and fluently, and can extract all important information from any text. Your task is to summarize and extract all key takeaways of the following text delimited by triple backticks in all relevant aspects. 
 
@@ -65,9 +65,9 @@ keywords_dict = {
     #         'ti:LLM'],
     # 'MMT': ['abs:multimodal+AND+abs:machine+AND+abs:translation'],
     # 'Domain Adaptation': ['ti:Domain+AND+ti:Adaptation', 'abs:Domain+AND+abs:Adaptation'],
-    # '元宇宙/虚拟人': ['ti:"Virtual Avatar"+OR+ti:"Virtual Avatar"', 
-    #             'ti:Metaverse', 
-    #             'ti:Avatar'],
+    '元宇宙/虚拟人': ['ti:"Virtual Avatar"+OR+ti:"Virtual Avatar"', 
+                'ti:Metaverse', 
+                'ti:Avatar'],
     # 'Open-Set': ['ti:Open+AND+ti:Set'],
     # '强化学习': ['ti:reinforcement+AND+ti:learning'],
     # 'Few-Shot': ['ti:few+AND+ti:shot', 'abs:few+AND+abs:shot'],
@@ -103,7 +103,7 @@ keywords_dict = {
                                 '(all:"Talking Head"+OR+all:"Talking Face"+OR+all:"Audio-driven"+OR+all:"Talking Portrait"+OR+all:"Speech Driven"+OR+all:"talking avatar"+OR+all:"talking video")+AND+(ti:NeRF+OR+ti:"Neural Radiance")',
                                 '(all:"Talking Head"+OR+all:"Talking Face"+OR+all:"Audio-driven"+OR+all:"Talking Portrait"+OR+all:"Speech Driven"+OR+all:"talking avatar"+OR+all:"talking video")+AND+(ti:Diffusion+OR+ti:Diffuse)',
                                 '(all:"Talking Head"+OR+all:"Talking Face"+OR+all:"Audio-driven"+OR+all:"Talking Portrait"+OR+all:"Speech Driven"+OR+all:"talking avatar"+OR+all:"talking video")+AND+(all:"Gaussian Splatting")',
-                                # 'all:Talk+OR+all:talking',
+                                'ti:Talker+OR+ti:Talk',
     ],
     "3DGS": ['ti:"Gaussian Splatting"+OR+abs:"Gaussian Splatting"+OR+ti:"3D Gaussian"+OR+abs:"3D Gaussian"', 
                             '(ti:"Gaussian Splatting"+OR+abs:"Gaussian Splatting")+AND+(ti:Head+OR+ti:Avatar+OR+ti:Human)'],

@@ -33,8 +33,8 @@ def googleapi(message, method='api', api_key=None, proxy_url=None):
                 "threshold": "BLOCK_NONE"
             }
         ]
-        # model = genai.GenerativeModel('gemini-1.0-pro', safety_settings=safety_settings)
-        model = genai.GenerativeModel('gemini-1.5-pro-latest', safety_settings=safety_settings)
+        model = genai.GenerativeModel('gemini-1.0-pro', safety_settings=safety_settings)
+        # model = genai.GenerativeModel('gemini-1.5-pro-latest', safety_settings=safety_settings)
         # model = genai.get_tuned_model('tunedModels/gemini-pro')
         # pprint.pprint(model)
         response = model.generate_content(message)
@@ -78,7 +78,7 @@ if __name__ == '__main__':
                     'AIzaSyCJkNYVfofB3E6bBulTbwjkGHQENWu8VBQ',
                     # 'AIzaSyASdOyjqMbXQWi0h4xnGuKNWtovH6vrEmk',
                     ]
-    GOOGLE_API_KEY = 'AIzaSyALrVIKu8GEMwQB1o8cqe5LZbgg7H3-a-A'
+    GOOGLE_API_KEY = 'AIzaSyDwlS-8OQvtPlwsGxZetRosm8Gebp342Vk'
     
     # GOOGLE_API_KEY = api_key_list[1]
     # GOOGLE_API_KEY = 'AIzaSyCWiiXeTYLDm37lBbl8vgmucR_YlsG2LD8'

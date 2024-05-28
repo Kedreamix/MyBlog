@@ -3,10 +3,11 @@ from configs import root_path
 from chatgpt import gpt_35_api_stream
 import google.generativeai as genai
 import time
-from chatpaperfree import Paper, Reader
+# from chatpaperfree import Paper, Reader
+from chat_paper import Paper, Reader
 from configs import GOOGLE_API_KEY, summary_prompt, proxy_gpt
 import random
-
+import tenacity
 def check_filename(title):
     pdfname = title.replace("/", "_")  # pdf名中不能出现/和：
     pdfname = pdfname.replace("?", "_")
@@ -20,25 +21,41 @@ def check_filename(title):
         pdfname = pdfname[:125]
     return pdfname
 
-def chatpaper_summary(file, p=1, temperature=0.5):
-    text = '''Abstract,Introduction,Related Work,Background,Preliminary,Problem Formulation,Methods,Methodology,Method,Approach,Approaches,Materials and Methods,Experiment Settings,Experiment,Experimental Results,Evaluation,Experiments,Results,Findings,Data Analysis,Discussion,Results and Discussion,Conclusion,References'''
-    section_list = text.split(',')
-    paper_list = [Paper(path=file, sl=section_list)]
-    # 创建一个Reader对象
-    api_key_list = ['AIzaSyALrVIKu8GEMwQB1o8cqe5LZbgg7H3-a-A',
-                    ]
-    if random.random() < 0.5:
-        api_key_list = api_key_list[::-1]
-    random.shuffle(api_key_list)
-    reader = Reader(api_keys=api_key_list,
-                    model_name='gemini-Pro',
-                    p=p,
-                    temperature=temperature)
-    sum_info, cost = reader.summary_with_chat(
-        paper_list=paper_list)  # type: ignore  
-    return sum_info 
+# def chatpaper_summary(file, p=1, temperature=0.5):
+#     text = '''Abstract,Introduction,Related Work,Background,Preliminary,Problem Formulation,Methods,Methodology,Method,Approach,Approaches,Materials and Methods,Experiment Settings,Experiment,Experimental Results,Evaluation,Experiments,Results,Findings,Data Analysis,Discussion,Results and Discussion,Conclusion,References'''
+#     section_list = text.split(',')
+#     paper_list = [Paper(path=file, sl=section_list)]
+#     # 创建一个Reader对象
+#     api_key_list = ['AIzaSyDwlS-8OQvtPlwsGxZetRosm8Gebp342Vk',
+#                     ]
+#     if random.random() < 0.5:
+#         api_key_list = api_key_list[::-1]
+#     random.shuffle(api_key_list)
+#     reader = Reader(api_keys=api_key_list,
+#                     model_name='gemini-Pro',
+#                     p=p,
+#                     temperature=temperature)
+#     sum_info, cost = reader.summary_with_chat(
+#         paper_list=paper_list)  # type: ignore  
+#     return sum_info 
 
-    
+def chatpaper_summary(file):
+    # if sort == 'Relevance':
+    #     sort = arxiv.SortCriterion.Relevance
+    # elif sort == 'LastUpdatedDate':
+    #     sort = arxiv.SortCriterion.LastUpdatedDate
+    # else:
+    #     sort = arxiv.SortCriterion.Relevance
+    paper_list = []
+    paper_list.append(Paper(path=file))
+    reader1 = Reader(key_word="",
+                         query="",
+                         filter_keys="",
+                         chatgpt_model='gpt-3.5-turbo',
+                         )
+    reader1.show_info()
+    sum_info = reader1.summary_with_chat(paper_list=paper_list)
+    return sum_info
     
 def set_detail(summary, content):
     content = content.strip()
@@ -64,6 +81,9 @@ def set_img(path_img_dir):
         s = s + f'<img src="./{prefix}/{f}" align="middle">\n'
     return set_detail('点此查看论文截图', s)
 
+@tenacity.retry(wait=tenacity.wait_exponential(multiplier=1, min=4, max=10),
+                    stop=tenacity.stop_after_attempt(5),
+                    reraise=True)
 
 def gpt_gen(prompt, method='gemini', key_name=''):
     if method=='chatgpt':
@@ -75,6 +95,20 @@ def gpt_gen(prompt, method='gemini', key_name=''):
         answer = gpt_35_api_stream(messages)
         response = answer[2]['content']
         
+        return response
+    elif method == 'gpt4free':
+        from g4f.client import Client
+        message = summary_prompt % (key_name, prompt)
+        messages = [
+            {"role": "system",
+             "content": "You are a researcher in the field of [" + key_name + "] who is good at summarizing papers using concise statements"},
+            {'role': 'user','content': message},]
+        client = Client()
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages = messages
+        )
+        response = response.choices[0].message.content
         return response
     elif method == 'gemini':
         message = summary_prompt % (key_name, prompt)
@@ -133,7 +167,12 @@ def typing(item, img_dir, key_name, daily=False):
     #     gptsummary1 = gpt_gen(summary, 'chatgpt', key_name)
     # except:
     #     gptsummary1 = gpt_gen(summary, 'gemini', key_name)
-    gptsummary1 = gpt_gen(summary, 'gemini', key_name)
+    try:
+        gptsummary1 = gpt_gen(summary, 'gpt4free', key_name)
+    except:
+        gptsummary1 = summary
+
+    print("gptsummary1", gptsummary1)
     if daily:
         save_dir = os.path.join(root_path, time.strftime("%Y-%m-%d") + '-daily')
     else:
@@ -142,8 +181,11 @@ def typing(item, img_dir, key_name, daily=False):
     arxiv_id = os.path.basename(url_id)
     
     save_path = os.path.join(save_dir, arxiv_id + '_' + pdfname + ".pdf")
-    if not daily:
+
+    if not daily:        
         gptsummary2 = chatpaper_summary(save_path)
+    print("gptsummary2", gptsummary2)
+            
 
     # time.sleep(5)
     img = set_img(img_dir)

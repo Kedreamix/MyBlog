@@ -20,7 +20,9 @@ toc_style_simple: true
 
 开号方式使用命令 useradd ，默认情况下直接 useradd user1 就可以了，用户目录为 /home/user1，但是考虑到服务器硬盘容量有限，最好将其划分到具有更大空间的目录如 /data，因此使用如下命令进行自定义添加用户
 在服务器中，可以通过 df -h 来查看磁盘空间，默认uid和gid为同一个
+
 ```bash
+$ groupadd user1 -g [gid]
 $ useradd -u [uid] -g [gid] -d /data/user1 -m -s /bin/bash user1
 ```
 
@@ -86,5 +88,53 @@ su 用户名 说明：su是switch user的缩写，表示用户切换
 
 ```bash
 cat /etc/passwd
+```
+
+
+
+
+
+### 生成密钥
+
+```bash
+ssh-keygen
+cd .ssh
+cat id_rsa.pub >> authorized_keys
+chmod 600 authorized_keys
+chmod 700 ~/.ssh
+```
+
+
+
+### 增加用户权限
+
+```
+sudo usermod -aG sudo username 
+sudo cat /etc/sudoers
+```
+
+| 增加权限 | sudo gpasswd -a mumbly sudo |
+| -------- | --------------------------- |
+| 删除权限 | sudo gpasswd -d mumbly sudo |
+
+
+
+### NAS开号步骤
+
+```
+NAS开号步骤
+1. ssh admin@172.31.233.218
+2. cd /share/Public
+3. useradd xxx
+4. mkdir xxx
+5. chown xxx:xxx xxx/
+6. 完事
+```
+
+
+
+```bash
+ sudo systemctl restart sshd
+ sudo systemctl status sshd
 ```
 

@@ -8,6 +8,8 @@ from chat_paper import Paper, Reader
 from configs import GOOGLE_API_KEY, summary_prompt, proxy_gpt
 import random
 import tenacity
+import g4f
+import json, requests
 def check_filename(title):
     pdfname = title.replace("/", "_")  # pdf名中不能出现/和：
     pdfname = pdfname.replace("?", "_")
@@ -51,7 +53,8 @@ def chatpaper_summary(file):
     reader1 = Reader(key_word="",
                          query="",
                          filter_keys="",
-                         chatgpt_model='gpt-3.5-turbo',
+                        #  chatgpt_model='gpt-3.5-turbo',
+                        chatgpt_model="ernie"
                          )
     reader1.show_info()
     sum_info = reader1.summary_with_chat(paper_list=paper_list)
@@ -81,10 +84,26 @@ def set_img(path_img_dir):
         s = s + f'<img src="./{prefix}/{f}" align="middle">\n'
     return set_detail('点此查看论文截图', s)
 
-@tenacity.retry(wait=tenacity.wait_exponential(multiplier=1, min=4, max=10),
+def get_access_token(api_key, secret_key):
+    """
+    使用 API Key 和 Secret Key 获取access_token。
+    :param api_key: 应用的API Key
+    :param secret_key: 应用的Secret Key
+    :return: access_token
+    """
+    url = f"https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id={api_key}&client_secret={secret_key}"
+    
+    response = requests.post(url, headers={'Content-Type': 'application/json'})
+    if response.status_code == 200:
+        return response.json().get("access_token")
+    else:
+        raise Exception("获取 access_token 失败")
+from configs import api_key, secret_key
+access_token = get_access_token(api_key, secret_key)
+
+@tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(5),
                     reraise=True)
-
 def gpt_gen(prompt, method='gemini', key_name=''):
     if method=='chatgpt':
         messages = [{'role': 'user','content': prompt},]
@@ -106,10 +125,34 @@ def gpt_gen(prompt, method='gemini', key_name=''):
         client = Client()
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages = messages
+            messages = messages,
+            provider=g4f.Provider.Liaobots
         )
         response = response.choices[0].message.content
+        if 'sorry' in response:
+            raise Exception("gpt4free error")
         return response
+    elif method == 'ernie':
+        message = summary_prompt % (key_name, prompt)
+        url = f"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k?access_token={access_token}"
+        # message_content = messages[1]['content'] + messages[2]['content']
+        payload = json.dumps({
+            "messages": [
+                {
+                    "role": "user",
+                    "content": message
+                }
+            ],
+            "system": "You are a researcher in the field of [" + key_name + "] who is good at summarizing papers using concise statements"
+            })
+        headers = {'Content-Type': 'application/json'}
+        
+        response = requests.post(url, headers=headers, data=payload)
+        response_json = response.json()
+        print(response_json)
+        result = response_json['result']
+        return result
+        # print(result)
     elif method == 'gemini':
         message = summary_prompt % (key_name, prompt)
         os.environ['https_proxy'] = proxy_gpt['https']
@@ -170,7 +213,7 @@ def typing(item, img_dir, key_name, daily=False):
     try:
         gptsummary1 = gpt_gen(summary, 'gpt4free', key_name)
     except:
-        gptsummary1 = summary
+        gptsummary1 = gpt_gen(summary, 'ernie', key_name)
 
     print("gptsummary1", gptsummary1)
     if daily:

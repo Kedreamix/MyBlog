@@ -6,6 +6,7 @@ import json
 import os
 import re
 from collections import namedtuple
+import g4f
 from g4f.client import Client
 import arxiv
 import numpy as np
@@ -17,7 +18,25 @@ import markdown
 import fitz, io, os
 from PIL import Image
 
+g4f_provdier = g4f.Provider.Liaobots
 
+def get_access_token(api_key, secret_key):
+    """
+    使用 API Key 和 Secret Key 获取access_token。
+    :param api_key: 应用的API Key
+    :param secret_key: 应用的Secret Key
+    :return: access_token
+    """
+    url = f"https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id={api_key}&client_secret={secret_key}"
+    
+    response = requests.post(url, headers={'Content-Type': 'application/json'})
+    if response.status_code == 200:
+        return response.json().get("access_token")
+    else:
+        raise Exception("获取 access_token 失败")
+api_key = 'ZgaeXqX9WkmCoEvCZEcWDATZ'
+secret_key = '7cKeQW3nlica7kHGuV3VKi5QBtmDm6K8'
+access_token = get_access_token(api_key, secret_key)
 class Paper:
     def __init__(self, path, title='', url='', abs='', authers=[]):
         # 初始化函数，根据pdf路径初始化Paper对象                
@@ -323,7 +342,6 @@ class Reader:
         #     openai.api_base = self.config.get('AzureOPenAI', 'OPENAI_API_BASE')
         #     openai.api_type = 'azure'
         #     openai.api_version = self.config.get('AzureOPenAI', 'OPENAI_API_VERSION')
-        self.client = Client()
         self.cur_api = 0
         self.file_format = "md"
         # if args.save_image:
@@ -410,13 +428,13 @@ class Reader:
                 pass
         return paper_list
 
-    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=1, min=4, max=10),
+    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(5),
                     reraise=True)
     def try_download_pdf(self, result, path, pdf_name):
         result.download_pdf(path, filename=pdf_name)
 
-    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=1, min=4, max=10),
+    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(5),
                     reraise=True)
     def upload_gitee(self, image_path, image_name='', ext='png'):
@@ -539,7 +557,7 @@ class Reader:
             # self.export_to_markdown("\n".join(htmls), file_name=file_name, mode=mode)
             htmls = []
 
-    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=1, min=4, max=10),
+    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(5),
                     reraise=True)
     def chat_conclusion(self, text, conclusion_prompt_token=800):
@@ -584,17 +602,22 @@ class Reader:
         #         messages=messages,
         #     )
 
-        response = self.client.chat.completions.create(
-            model=self.chatgpt_model,
-            messages=messages,
-            # messages=[{"role": "user", "content": "Hello"}],
-            # ...
-        )
-        result = ''
-        for choice in response.choices:
-            result += choice.message.content
+        # response = self.client.chat.completions.create(
+        #     model=self.chatgpt_model,
+        #     messages=messages,
+        #     # messages=[{"role": "user", "content": "Hello"}],
+        #     # ...
+        #     provider=g4f_provdier
+        # )
+        # result = ''
+        # for choice in response.choices:
+        #     result += choice.message.content
+        try:
+            result = self.chat(messages=messages, method='gpt-3.5-turbo')
+        except:
+            result = self.chat(messages=messages, method='ernie')
         print("conclusion_result:\n", result)
-        if "I'm sorry" in result:
+        if "sorry" in result:
             print("error response:", result)
             raise Exception("error response")
         # print("prompt_token_used:", response.usage.prompt_tokens,
@@ -603,7 +626,7 @@ class Reader:
         # print("response_time:", response.response_ms / 1000.0, 's')
         return result
 
-    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=1, min=4, max=10),
+    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(5),
                     reraise=True)
     def chat_method(self, text, method_prompt_token=800):
@@ -637,18 +660,22 @@ class Reader:
                  """.format(self.language, self.language)},
         ]
         # 
-
-        response = self.client.chat.completions.create(
-            model=self.chatgpt_model,
-            messages=messages,
-            # messages=[{"role": "user", "content": "Hello"}],
-            # ...
-        )
-        result = ''
-        for choice in response.choices:
-            result += choice.message.content
+        # response = self.client.chat.completions.create(
+        #     model=self.chatgpt_model,
+        #     messages=messages,
+        #     # messages=[{"role": "user", "content": "Hello"}],
+        #     # ...
+        #     provider=g4f_provdier
+        # )
+        # result = ''
+        # for choice in response.choices:
+        #     result += choice.message.content
+        try:
+            result = self.chat(messages=messages, method='gpt-3.5-turbo')
+        except:
+            result = self.chat(messages=messages, method='ernie')
         print("method_result:\n", result)
-        if "I'm sorry" in result:
+        if "sorry" in result:
             print("error response:", result)
             raise Exception("error response")
         # print("prompt_token_used:", response.usage.prompt_tokens,
@@ -657,7 +684,7 @@ class Reader:
         # print("response_time:", response.response_ms / 1000.0, 's')
         return result
 
-    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=1, min=4, max=10),
+    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(5),
                     reraise=True)
     def chat_summary(self, text, summary_prompt_token=1100):
@@ -712,20 +739,26 @@ class Reader:
         #         messages=messages,
         #     )
         
-        response = self.client.chat.completions.create(
-            model=self.chatgpt_model,
-            messages=messages,
-            # messages=[{"role": "user", "content": "Hello"}],
-            # ...
-        )
+        # response = self.client.chat.completions.create(
+        #     model=self.chatgpt_model,
+        #     messages=messages,
+        #     # messages=[{"role": "user", "content": "Hello"}],
+        #     # ...
+        #     provider=g4f_provdier
+        # )
     
-        result = ''
-        for choice in response.choices:
-            result += choice.message.content
+        # result = ''
+        # for choice in response.choices:
+        #     result += choice.message.content
+        try:
+            result = self.chat(messages=messages, method='gpt-3.5-turbo')
+        except:
+            result = self.chat(messages=messages, method='ernie')
         print("summary_result:\n", result)
-        if "I'm sorry" in result:
+        if "sorry" in result:
             print("error response:", result)
             raise Exception("error response")
+        
         # print(dir(response))
         # print("prompt_token_used:", response.usage.prompt_tokens,
         #       "completion_token_used:", response.usage.completion_tokens,
@@ -748,6 +781,46 @@ class Reader:
         print(f"Query: {self.query}")
         print(f"Sort: {self.sort}")
 
+    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
+                    stop=tenacity.stop_after_attempt(5),
+                    reraise=True)
+    def chat(self, messages, method = 'gpt-3.5-turbo'):
+        if method == 'gpt-3.5-turbo':
+            client = self.client = Client()
+            response = client.chat.completions.create(
+                model=self.chatgpt_model,
+                messages=messages,
+                # messages=[{"role": "user", "content": "Hello"}],
+                # ...
+                provider=g4f_provdier
+            )
+            result = ''
+            for choice in response.choices:
+                result += choice.message.content
+            if 'sorry' in result:
+                raise Exception("error response")
+
+        elif method == 'ernie':
+            url = f"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k?access_token={access_token}"
+            message_content = messages[1]['content'] + messages[2]['content']
+            payload = json.dumps({
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": message_content
+                    }
+                ],
+                "system": messages[0]['content']
+                })
+            headers = {'Content-Type': 'application/json'}
+            
+            response = requests.post(url, headers=headers, data=payload)
+            response_json = response.json()
+            print(response_json)
+            result = response_json['result']
+            # print(result)
+        return result
+
 
 
 def chat_paper_main(args):
@@ -763,7 +836,7 @@ def chat_paper_main(args):
         reader1 = Reader(key_word=args.key_word,
                          query=args.query,
                          filter_keys=args.filter_keys,
-                         chatgpt_model='gpt-3.5-turbo',
+                         chatgpt_model=args.chatgpt_model,
                          sort=sort,
                          args=args
                          )
@@ -788,7 +861,7 @@ def chat_paper_main(args):
         reader1 = Reader(key_word=args.key_word,
                          query=args.query,
                          filter_keys=args.filter_keys,
-                         chatgpt_model='gpt-3.5-turbo',
+                         chatgpt_model=args.chatgpt_model,
                          sort=sort,
                          args=args
                          )
@@ -800,7 +873,8 @@ def chat_paper_main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pdf_path", type=str, default=r'demo.pdf', help="if none, the bot will download from arxiv with query")
+    parser.add_argument("--chatgpt_model", type=str, default='ernie', help="the chatgpt model name")
+    parser.add_argument("--pdf_path", type=str, default=r'D:\MyBlog\AutoFX\demo.pdf', help="if none, the bot will download from arxiv with query")
     # parser.add_argument("--pdf_path", type=str, default=r'C:\Users\Administrator\Desktop\DHER\RHER_Reset\ChatPaper', help="if none, the bot will download from arxiv with query")
     # parser.add_argument("--pdf_path", type=str, default='', help="if none, the bot will download from arxiv with query")
     parser.add_argument("--query", type=str, default='all: ChatGPT robot',

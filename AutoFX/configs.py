@@ -14,6 +14,8 @@ threshold = 0.5
 enable_mkldnn = True
 enforce_cpu = True
 thread_num = 4
+api_key = 'ZgaeXqX9WkmCoEvCZEcWDATZ'
+secret_key = '7cKeQW3nlica7kHGuV3VKi5QBtmDm6K8'
 GOOGLE_API_KEY = 'AIzaSyALrVIKu8GEMwQB1o8cqe5LZbgg7H3-a-A'
 summary_prompt= '''User
     Ignore all previous instructions. You are a highly proficient researcher that can read and write properly and fluently, and can extract all important information from any text. Your task is to summarize and extract all key takeaways of the following text delimited by triple backticks in all relevant aspects. 

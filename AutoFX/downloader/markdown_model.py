@@ -10,6 +10,8 @@ import random
 import tenacity
 import g4f
 import json, requests
+from loguru import logger
+import re
 def check_filename(title):
     pdfname = title.replace("/", "_")  # pdf名中不能出现/和：
     pdfname = pdfname.replace("?", "_")
@@ -98,11 +100,12 @@ def get_access_token(api_key, secret_key):
         return response.json().get("access_token")
     else:
         raise Exception("获取 access_token 失败")
+    
 from configs import api_key, secret_key
 access_token = get_access_token(api_key, secret_key)
 
 @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
-                    stop=tenacity.stop_after_attempt(5),
+                    stop=tenacity.stop_after_attempt(10),
                     reraise=True)
 def gpt_gen(prompt, method='gemini', key_name=''):
     if method=='chatgpt':
@@ -131,7 +134,21 @@ def gpt_gen(prompt, method='gemini', key_name=''):
         response = response.choices[0].message.content
         if 'sorry' in response:
             raise Exception("gpt4free error")
-        return response
+        result = response
+        if not any(keywork not in result for keywork in ['**Summary', 'Summary', '总结', '摘要', '**摘要', '**总结']):
+            logger.error(f"error, didn't find Summary {result}")
+            raise Exception("ernie error")
+
+        # match = re.search(r'\*\*Summary(.*)', result, re.DOTALL)
+        # 合并对 "Summary"、"总结" 和 "摘要" 以及其加粗形式的匹配
+        match = re.search(r'\*?\*?(?:Summary|总结|摘要).*', result, re.DOTALL)
+
+        if match:
+            return match.group()
+        else:
+            logger.error(f"error, didn't find **Summary** {result}")
+            raise Exception("summary error")
+            return response
     elif method == 'ernie':
         message = summary_prompt % (key_name, prompt)
         url = f"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k?access_token={access_token}"
@@ -149,10 +166,21 @@ def gpt_gen(prompt, method='gemini', key_name=''):
         
         response = requests.post(url, headers=headers, data=payload)
         response_json = response.json()
-        print(response_json)
         result = response_json['result']
-        return result
-        # print(result)
+        if not any(keywork not in result for keywork in ['**Summary', 'Summary', '总结', '摘要', '**摘要', '**总结']):
+            logger.error(f"error, didn't find Summary {result}")
+            raise Exception("ernie error")
+
+        # match = re.search(r'\*\*Summary(.*)', result, re.DOTALL)
+        # 合并对 "Summary"、"总结" 和 "摘要" 以及其加粗形式的匹配
+        match = re.search(r'\*?\*?(?:Summary|总结|摘要).*', result, re.DOTALL)
+
+        if match:
+            return match.group()
+        else:
+            logger.error(f"error, didn't find **Summary** {result}")
+            raise Exception("summary error")
+            # print(result)
     elif method == 'gemini':
         message = summary_prompt % (key_name, prompt)
         os.environ['https_proxy'] = proxy_gpt['https']
@@ -199,6 +227,9 @@ def gpt_gen(prompt, method='gemini', key_name=''):
         response = response.text
         return response
 
+@tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
+                    stop=tenacity.stop_after_attempt(10),
+                    reraise=True)
 def typing(item, img_dir, key_name, daily=False):
     url_id, updated, published, title, summary, authors, categorys, comments = item
     # print(item)
@@ -215,7 +246,7 @@ def typing(item, img_dir, key_name, daily=False):
     except:
         gptsummary1 = gpt_gen(summary, 'ernie', key_name)
 
-    print("gptsummary1", gptsummary1)
+    logger.info("gptsummary1:\n{}".format(gptsummary1))
     if daily:
         save_dir = os.path.join(root_path, time.strftime("%Y-%m-%d") + '-daily')
     else:
@@ -227,7 +258,7 @@ def typing(item, img_dir, key_name, daily=False):
 
     if not daily:        
         gptsummary2 = chatpaper_summary(save_path)
-    print("gptsummary2", gptsummary2)
+        logger.info("gptsummary2:\n{}".format(gptsummary2))
             
 
     # time.sleep(5)

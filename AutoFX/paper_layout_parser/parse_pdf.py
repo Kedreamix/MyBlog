@@ -77,7 +77,7 @@ def find_nearest_distance_txt_and_merge_bbox(all_text_box, table_bbox, thod=300)
 
 
 def parse_page(img, page_num, save_dir='./output'):  # img: rgb
-    print('page_num:', page_num)
+    # print('page_num:', page_num)
     layout = parse_one_page(img)
 
     os.makedirs(save_dir, exist_ok=True)

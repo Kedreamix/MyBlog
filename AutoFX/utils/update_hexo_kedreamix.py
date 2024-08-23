@@ -7,7 +7,7 @@ from utils.union import check_filename
 import glob
 import time
 from PicConvert.convert import convert_images
-
+from loguru import logger
 def generate_header(title, path_bg, description):
     # tag = ''
     # for t in title.split('/'):
@@ -87,12 +87,13 @@ def search_bg(md_file):
 
 def control_blog(title, path_md, daily = False):
     now = datetime.datetime.now().strftime("%Y-%m-%d")
+    # now = '2024-08-05'
     if daily:
         now += '-daily'
     filename = check_filename(title)
     # filename = os.path.join(check_filename(title), now)
     # 新建博客
-    print(os.path.join(root_blog, now))
+    # print(os.path.join(root_blog, now))
     os.makedirs(os.path.join(root_blog, now), exist_ok=True)
     os.makedirs(temp_dir, exist_ok=True)
     # target_path = os.path.join(root_blog, filename, f'crop_{check_filename(title)}')
@@ -124,13 +125,13 @@ def control_blog(title, path_md, daily = False):
             content = content.split('---')[2]
     if not daily:
         try:
-            print("Start Convert Images", path_md)
+            logger.info("Start Convert Images {}".format(path_md))
             try:
                 mode1 = 'bili'
                 convert_images(path_md, mode1)
                 new_file = os.path.join(temp_dir, f'New_{mode1}_{os.path.basename(path_md)}')
             except Exception as e:
-                print(e, "write error", path_md)
+                logger.error("write error {} {}".format(e,path_md))
                 mode1 = 'csdn'
                 convert_images(path_md, mode1)
                 new_file = os.path.join(temp_dir, f'New_{mode1}_{os.path.basename(path_md)}')
@@ -142,7 +143,7 @@ def control_blog(title, path_md, daily = False):
             path_md = path_md2
         except Exception as e:
             path_bg = ''
-            print(e, "write error", path_md)
+            logger.error("write error {} {}".format(e,path_md))
     else:
         path_bg = ''
     with open(path_md, 'r', encoding='utf-8') as f:

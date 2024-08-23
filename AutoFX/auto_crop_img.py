@@ -7,7 +7,7 @@ from paper_layout_parser.parse_pdf import convert_pdf2img, parse_page
 from downloader.markdown_model import typing
 from configs import proxy, root_path
 from tqdm import tqdm
-
+from loguru import logger
 
 def parse_pdf(path_pdf, save_dir, max_file=6):
     os.makedirs(save_dir, exist_ok=True)
@@ -50,22 +50,22 @@ def control(root_pdf, key_name, daily=False):
     else:
         all_md = ''
     for f in tqdm(files):
-        print("Processing: ", f)
+        logger.info("Processing: {}".format(f))
         aid = os.path.basename(f).split('_')[0]
         save_dir = os.path.join(root_pdf, f'crop_{key_name}', aid)
         tmp_all = glob.glob(os.path.join(root_pdf, 'crop_*', aid))
         if aid not in abs_dict.keys():
-            print(f'{aid} not in abs_dict')
+            logger.info(f'{aid} not in abs_dict')
             continue
         elif os.path.exists(save_dir):
-            print(f'{aid} already exists')
+            logger.info(f'{aid} already exists')
             continue
         if len(tmp_all) > 0:
             shutil.copytree(tmp_all[0], save_dir)
         else:
             parse_pdf(f, save_dir)
         item = abs_dict[aid]
-        print("Start Chat With paper")
+        logger.info("Start Chat With paper")
         md = typing(item, os.path.join(root_pdf, f'crop_{key_name}', aid), key_name, daily)
         all_md = all_md + md
         # np.savetxt(os.path.join(root_pdf, f"{key_name}_abs.md"), [all_md], "%s", encoding='utf-8')

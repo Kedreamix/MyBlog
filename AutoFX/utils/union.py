@@ -7,13 +7,13 @@ import json
 import tenacity
 from configs import proxy, root_path
 from utils.multi_download import download
-
+from loguru import logger
 @tenacity.retry(wait=tenacity.wait_exponential(multiplier=1, min=4,
                                                    max=10),
                     stop=tenacity.stop_after_attempt(5),
                     reraise=True)
 def get_one_page(url):
-    print('GET', url)
+    logger.info(f'GET {url}')
     time.sleep(16)
 
     response = requests.get(url, verify=False, proxies=proxy)
@@ -36,7 +36,7 @@ def check_if_pdf_valid(filename):
     try:
         text = extract_text(filename)
     except Exception as e:
-        print(f"PDF {filename} is corrupted: {e}")
+        logger.error(f"PDF {filename} is corrupted: {e}")
         return False
     
     # print("PDF is not corrupted.")
@@ -48,7 +48,7 @@ def download_loop(url, title, save_dir, desc):
     arxiv_id = os.path.basename(url)
     save_path = os.path.join(save_dir, arxiv_id + '_' + pdfname + ".pdf")
     if os.path.exists(save_path) and check_if_pdf_valid(save_path): 
-        print(arxiv_id, "hase download success in", save_path)
+        logger.info(f"{arxiv_id} hase download success in {save_path}" )
         return
     times = 0
     while True:
@@ -60,15 +60,15 @@ def download_loop(url, title, save_dir, desc):
                 pdf_url = url[:-2].replace('abs', 'pdf') + ".pdf"
             flag = download(pdf_url, save_path, desc=desc)
             if check_if_pdf_valid(save_path): 
-                print("download success", arxiv_id)
+                logger.info(f"download success {arxiv_id} in {save_path}")
             else:
                 flag = False
-                print("download failed", arxiv_id)
+                logger.info(f"download failed {arxiv_id}")
                 if os.path.exists(save_path): os.remove(save_path)
                 time.sleep(11)
         except:
             flag = False
-            print('File download failed:', arxiv_id)
+            logger.info(f'File download failed: {arxiv_id}')
             if os.path.exists(save_path): os.remove(save_path)
             time.sleep(11)
         

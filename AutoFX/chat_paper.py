@@ -17,7 +17,7 @@ import tiktoken
 import markdown
 import fitz, io, os
 from PIL import Image
-
+from loguru import logger
 g4f_provdier = g4f.Provider.Liaobots
 
 def get_access_token(api_key, secret_key):
@@ -62,7 +62,7 @@ class Paper:
         self.text_list = [page.get_text() for page in self.pdf]
         self.all_text = ' '.join(self.text_list)
         self.section_page_dict = self._get_all_page_index() # 段落与页码的对应字典
-        print("section_page_dict", self.section_page_dict)
+        logger.info("section_page_dict {}".format(self.section_page_dict))
         self.section_text_dict = self._get_all_page() # 段落与内容的对应字典
         self.section_text_dict.update({"title": self.title})
         self.section_text_dict.update({"paper_info": self.get_paper_info()})
@@ -176,7 +176,7 @@ class Paper:
                             max_font_size = font_size # 更新最大值
                             max_string = block["lines"][0]["spans"][0]["text"] # 更新最大值对应的字符串
         max_font_sizes.sort()                
-        print("max_font_sizes", max_font_sizes[-10:])
+        logger.info("max_font_sizes {}".format(max_font_sizes[-10:]))
         cur_title = ''
         for page_index, page in enumerate(doc): # 遍历每一页
             text = page.get_text("dict") # 获取页面上的文本信息
@@ -187,7 +187,7 @@ class Paper:
                         cur_string = block["lines"][0]["spans"][0]["text"] # 更新最大值对应的字符串
                         font_flags = block["lines"][0]["spans"][0]["flags"] # 获取第一行第一段文字的字体特征
                         font_size = block["lines"][0]["spans"][0]["size"] # 获取第一行第一段文字的字体大小                         
-                        # print(font_size)
+                        # (font_size)
                         if abs(font_size - max_font_sizes[-1]) < 0.3 or abs(font_size - max_font_sizes[-2]) < 0.3:                        
                             # print("The string is bold.", max_string, "font_size:", font_size, "font_flags:", font_flags)                            
                             if len(cur_string) > 4 and "arXiv" not in cur_string:                            
@@ -455,11 +455,11 @@ class Reader:
             try:
                 chat_summary_text = self.chat_summary(text=text)
             except Exception as e:
-                print("summary_error:", e)
+                logger.error(f"summary_error: {e}")
                 import sys
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                print(exc_type, fname, exc_tb.tb_lineno)
+                # print(exc_type, fname, exc_tb.tb_lineno)
                 if "maximum context" in str(e):
                     current_tokens_index = str(e).find("your messages resulted in") + len(
                         "your messages resulted in") + 1
@@ -467,6 +467,7 @@ class Reader:
                     summary_prompt_token = offset + 1000 + 150
                     chat_summary_text = self.chat_summary(text=text, summary_prompt_token=summary_prompt_token)
 
+            logger.info("Summary:\n{}".format(chat_summary_text))
             # htmls.append('## Paper:' + str(paper_index + 1))
             htmls.append('\n\n\n')
             htmls.append(chat_summary_text)
@@ -478,7 +479,7 @@ class Reader:
                 if 'method' in parse_key.lower() or 'approach' in parse_key.lower():
                     method_key = parse_key
                     break
-
+                
             if method_key != '':
                 text = ''
                 method_text = ''
@@ -491,11 +492,12 @@ class Reader:
                 try:
                     chat_method_text = self.chat_method(text=text)
                 except Exception as e:
-                    print("method_error:", e)
-                    import sys
-                    exc_type, exc_obj, exc_tb = sys.exc_info()
-                    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                    print(exc_type, fname, exc_tb.tb_lineno)
+                    logger.error(f"method_error: {e}")
+                    # print("method_error:", e)
+                    # import sys
+                    # exc_type, exc_obj, exc_tb = sys.exc_info()
+                    # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                    # print(exc_type, fname, exc_tb.tb_lineno)
                     if "maximum context" in str(e):
                         current_tokens_index = str(e).find("your messages resulted in") + len(
                             "your messages resulted in") + 1
@@ -504,9 +506,12 @@ class Reader:
                         chat_method_text = self.chat_method(text=text, method_prompt_token=method_prompt_token)
                 htmls.append(chat_method_text)
             else:
+                logger.info("Method:\n{}".format("No method found"))
                 chat_method_text = ''
+            logger.info("Method:\n{}".format(chat_method_text))
             htmls.append("\n" * 4)
 
+               
             # 第三步总结全文，并打分：
             conclusion_key = ''
             for parse_key in paper.section_text_dict.keys():
@@ -528,11 +533,11 @@ class Reader:
             try:
                 chat_conclusion_text = self.chat_conclusion(text=text)
             except Exception as e:
-                print("conclusion_error:", e)
+                logger.error(f"conclusion_error: {e}")
                 import sys
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                print(exc_type, fname, exc_tb.tb_lineno)
+                # print(exc_type, fname, exc_tb.tb_lineno)
                 if "maximum context" in str(e):
                     current_tokens_index = str(e).find("your messages resulted in") + len(
                         "your messages resulted in") + 1
@@ -540,6 +545,8 @@ class Reader:
                     conclusion_prompt_token = offset + 800 + 150
                     chat_conclusion_text = self.chat_conclusion(text=text,
                                                                 conclusion_prompt_token=conclusion_prompt_token)
+            
+            logger.info("Conclusion:\n{}".format(chat_conclusion_text))
             htmls.append(chat_conclusion_text)
             htmls.append("\n" * 4)
 
@@ -557,8 +564,8 @@ class Reader:
             # self.export_to_markdown("\n".join(htmls), file_name=file_name, mode=mode)
             htmls = []
 
-    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
-                    stop=tenacity.stop_after_attempt(5),
+    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=10),  # 增加 multiplier 和 max
+                    stop=tenacity.stop_after_attempt(10),
                     reraise=True)
     def chat_conclusion(self, text, conclusion_prompt_token=800):
         # openai.api_key = self.chat_api_list[self.cur_api]
@@ -612,22 +619,35 @@ class Reader:
         # result = ''
         # for choice in response.choices:
         #     result += choice.message.content
-        try:
-            result = self.chat(messages=messages, method='gpt-3.5-turbo')
-        except:
-            result = self.chat(messages=messages, method='ernie')
-        print("conclusion_result:\n", result)
+        # for retry in range(3):
+        #     try:
+            #     result = self.chat(messages=messages, method='gpt-3.5-turbo')
+            # except:
+        result = self.chat(messages=messages, method='ernie')
+
+        # 检查结果中是否包含任何形式的 "Conclusion" 关键字
+        if not any(conclusion_keyword in result for conclusion_keyword in ['8. Conclusion', '8. 结论', "8. **Conclusion", "8. **结论"]):
+            raise Exception("Error response: No conclusion found {}".format(result))
+
+        # 合并对 "Conclusion" 和 "结论" 以及其加粗形式的匹配
+        match = re.search(r'8\.\s*\*?\*?(?:Conclusion|结论)\*?\*?:.*', result, re.DOTALL)
+
+        if match:
+            result = match.group()
+        else:
+            raise Exception(f"Error response: Conclusion not found in the expected format {result}")
         if "sorry" in result:
-            print("error response:", result)
+            logger.error("error response:\n{}".format(result))
             raise Exception("error response")
+        # logger.info("conclusion_result:\n{}".format(result))
         # print("prompt_token_used:", response.usage.prompt_tokens,
         #       "completion_token_used:", response.usage.completion_tokens,
         #       "total_token_used:", response.usage.total_tokens)
         # print("response_time:", response.response_ms / 1000.0, 's')
         return result
 
-    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
-                    stop=tenacity.stop_after_attempt(5),
+    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=10),  # 增加 multiplier 和 max
+                    stop=tenacity.stop_after_attempt(10),
                     reraise=True)
     def chat_method(self, text, method_prompt_token=800):
         # openai.api_key = self.chat_api_list[self.cur_api]
@@ -659,33 +679,36 @@ class Reader:
                  Be sure to use {} answers (proper nouns need to be marked in English), statements as concise and academic as possible, do not repeat the content of the previous <summary>, the value of the use of the original numbers, be sure to strictly follow the format, the corresponding content output to xxx, in accordance with \n line feed, ....... means fill in according to the actual requirements, if not, you can not write.                 
                  """.format(self.language, self.language)},
         ]
-        # 
-        # response = self.client.chat.completions.create(
-        #     model=self.chatgpt_model,
-        #     messages=messages,
-        #     # messages=[{"role": "user", "content": "Hello"}],
-        #     # ...
-        #     provider=g4f_provdier
-        # )
-        # result = ''
-        # for choice in response.choices:
-        #     result += choice.message.content
-        try:
-            result = self.chat(messages=messages, method='gpt-3.5-turbo')
-        except:
-            result = self.chat(messages=messages, method='ernie')
-        print("method_result:\n", result)
+
+        result = self.chat(messages=messages, method='ernie')
+
+        # 检查结果中是否包含任何形式的"Methods"关键字
+        if not any(method_keyword in result for method_keyword in ['7. Methods', '7. 方法', "7. **Methods", "7. **方法"]):
+            logger.error(f"No method in result: {result}")
+            raise Exception("Error response: No method found")
+
+        # 合并对 "Methods" 和 "方法" 的匹配
+        match = re.search(r'7\.\s*\*?\*?(?:Methods|方法).*', result, re.DOTALL)
+
+        if match:
+            result = match.group()
+        else:
+            logger.error(f"Could not find method in result: {result}")
+            raise Exception("Error response: Method not found in the expected format")
+        
         if "sorry" in result:
-            print("error response:", result)
+            logger.error("error response:\n{}".format(result))
             raise Exception("error response")
+        
+        # logger.info("method_result:\n{}".format(result))
         # print("prompt_token_used:", response.usage.prompt_tokens,
         #       "completion_token_used:", response.usage.completion_tokens,
         #       "total_token_used:", response.usage.total_tokens)
         # print("response_time:", response.response_ms / 1000.0, 's')
         return result
 
-    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
-                    stop=tenacity.stop_after_attempt(5),
+    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=10),  # 增加 multiplier 和 max
+                    stop=tenacity.stop_after_attempt(10),
                     reraise=True)
     def chat_summary(self, text, summary_prompt_token=1100):
         # openai.api_key = self.chat_api_list[self.cur_api]
@@ -749,16 +772,34 @@ class Reader:
     
         # result = ''
         # for choice in response.choices:
-        #     result += choice.message.content
-        try:
-            result = self.chat(messages=messages, method='gpt-3.5-turbo')
-        except:
-            result = self.chat(messages=messages, method='ernie')
-        print("summary_result:\n", result)
-        if "sorry" in result:
-            print("error response:", result)
-            raise Exception("error response")
+        # #     result += choice.message.content
+        # for retry in range(3):
+        #     try:
+            #     result = self.chat(messages=messages, method='gpt-3.5-turbo')
+            # except:
+
+        result = self.chat(messages=messages, method='ernie')
+
+        # 检查结果中是否包含任何形式的标题关键字
+        if not any(title_keyword in result for title_keyword in ['1. Title', '1. 标题', "1. **Title", "1. **标题"]):
+            logger.error(f"No title in result: {result}")
+            raise Exception("Error response: No title found")
+
+        # 更新正则表达式，处理加粗的标题格式
+        match = re.search(r'1\.\s*\*?\*?(?:Title|标题).*', result, re.DOTALL)
+
+        if match:
+            result = match.group()
+        else:
+            logger.error(f"Could not find title in result: {result}")
+            raise Exception("Error response: Title not found in the expected format")
+
+           
         
+        if "sorry" in result:
+            logger.error("error response:\n{}".format(result))
+            raise Exception("error response")
+        # logger.info("summary_result:\n{}",format(result))
         # print(dir(response))
         # print("prompt_token_used:", response.usage.prompt_tokens,
         #       "completion_token_used:", response.usage.completion_tokens,
@@ -777,9 +818,9 @@ class Reader:
             # 定义一个方法，打印出读者信息
 
     def show_info(self):
-        print(f"Key word: {self.key_word}")
-        print(f"Query: {self.query}")
-        print(f"Sort: {self.sort}")
+        logger.info(f"Key word: {self.key_word}")
+        logger.info(f"Query: {self.query}")
+        logger.info(f"Sort: {self.sort}")
 
     @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(5),
@@ -816,9 +857,8 @@ class Reader:
             
             response = requests.post(url, headers=headers, data=payload)
             response_json = response.json()
-            print(response_json)
             result = response_json['result']
-            # print(result)
+
         return result
 
 

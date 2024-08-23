@@ -122,7 +122,7 @@ OpenSSH 是 SSH （Secure SHell） 协议的免费开源实现。OpenSSH提供�
 
 
 
-
+**若是win11，可以在系统中，最下面找到可选功能，在可选功能里面，添加以上可选功能即可**
 
 作为管理员，启动 Powershell 命令行的提升版本。
 
@@ -154,6 +154,14 @@ OpenSSH 是 SSH （Secure SHell） 协议的免费开源实现。OpenSSH提供�
 
 祝贺！ 您已完成在 Windows 上安装 SSH 服务器。
 
+
+
+上述成功以后可以测试一下，也就是简单的连接自己本机电脑，从这里面可以看到自己的用户名，密码是开机密码
+
+```bash
+ssh localhost
+```
+
 ### **离线安装**
 
 下载最新版本 [适用于Windows二进制文件的OpenSSH](https://github.com/PowerShell/Win32-OpenSSH/releases) （包OpenSSH-Win64.zip或OpenSSH-Win32.zip）
@@ -165,6 +173,16 @@ OpenSSH 是 SSH （Secure SHell） 协议的免费开源实现。OpenSSH提供�
 接下来，我们就可以使用常规的SSH的方式来连接我们配置好的windows了，我们只需要找到对应的IP地址，对其进行ssh连接即可。
 
 这里一定要注意，**密码是你微软账户的密码**。
+
+
+
+如果在tailscale中已经分配了一个IP地址，这样就可以直接连接这个IP地址即可
+
+```bash
+ssh 用户名@100.*.*.*
+```
+
+
 
 连接成功后即可远程办公了，比如我在家里，我们可以设置公司的电脑的ssh，后续我们就可以连接公司的电脑后对其进行操作，这样就比较的方便，当然，也可以对其进行远程，比如todesk等远程工具，这个可以见仁见智，我觉得都可以，有时候我只使用终端，我觉得都还好。
 

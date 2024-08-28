@@ -434,12 +434,6 @@ class Reader:
     def try_download_pdf(self, result, path, pdf_name):
         result.download_pdf(path, filename=pdf_name)
 
-    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
-                    stop=tenacity.stop_after_attempt(5),
-                    reraise=True)
-    def upload_gitee(self, image_path, image_name='', ext='png'):
-        return image_url
-
     def summary_with_chat(self, paper_list):
         htmls = []
         for paper_index, paper in enumerate(paper_list):
@@ -469,7 +463,6 @@ class Reader:
 
             logger.info("Summary:\n{}".format(chat_summary_text))
             # htmls.append('## Paper:' + str(paper_index + 1))
-            htmls.append('\n')
             htmls.append(chat_summary_text)
 
             # 第二步总结方法：
@@ -509,7 +502,6 @@ class Reader:
                 logger.info("Method:\n{}".format("No method found"))
                 chat_method_text = ''
             logger.info("Method:\n{}".format(chat_method_text))
-            htmls.append("\n")
 
                
             # 第三步总结全文，并打分：
@@ -548,7 +540,6 @@ class Reader:
             
             logger.info("Conclusion:\n{}".format(chat_conclusion_text))
             htmls.append(chat_conclusion_text)
-            htmls.append("\n")
 
             # # 整合成一个文件，打包保存下来。
             date_str = str(datetime.datetime.now())[:13].replace(' ', '-')
@@ -560,153 +551,30 @@ class Reader:
                                      date_str + '-' + self.validateTitle(paper.title[:80]) + "." + self.file_format)
             self.export_to_markdown("\n".join(htmls), file_name=file_name, mode=mode)
             return "\n".join(htmls)
-            # file_name = os.path.join(export_path, date_str+'-'+self.validateTitle(paper.title)+".md")
-            # self.export_to_markdown("\n".join(htmls), file_name=file_name, mode=mode)
-            htmls = []
 
-    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=10),  # 增加 multiplier 和 max
-                    stop=tenacity.stop_after_attempt(10),
-                    reraise=True)
-    def chat_conclusion(self, text, conclusion_prompt_token=800):
-        # openai.api_key = self.chat_api_list[self.cur_api]
-        # self.cur_api += 1
-        # self.cur_api = 0 if self.cur_api >= len(self.chat_api_list) - 1 else self.cur_api
-        text_token = len(self.encoding.encode(text))
-        clip_text_index = int(len(text) * (self.max_token_num - conclusion_prompt_token) / text_token)
-        clip_text = text[:clip_text_index]
+    def validResponse(self, result, keywords_list):
+        # 检查结果中是否包含任一关键词
+        if not any(keyword in result for keyword in keywords_list):
+            logger.error(f"No keyword found in result: {result}")
+            raise Exception("Error response: No keyword found")
 
-        messages = [
-            {"role": "system",
-             "content": "You are a reviewer in the field of [" + self.key_word + "] and you need to critically review this article"},
-            # chatgpt 角色
-            {"role": "assistant",
-             "content": "This is the <summary> and <conclusion> part of an English literature, where <summary> you have already summarized, but <conclusion> part, I need your help to summarize the following questions:" + clip_text},
-            # 背景知识，可以参考OpenReview的审稿流程
-            {"role": "user", "content": """                 
-                 8. Make the following summary.Be sure to use {} answers (proper nouns need to be marked in English).
-                    - (1):What is the significance of this piece of work?
-                    - (2):Summarize the strengths and weaknesses of this article in three dimensions: innovation point, performance, and workload.                   
-                    .......
-                 Follow the format of the output later: 
-                 8. Conclusion: \n\n
-                    - (1):xxx;\n                     
-                    - (2):Innovation point: xxx; Performance: xxx; Workload: xxx;\n                      
-                 
-                 Be sure to use {} answers (proper nouns need to be marked in English), statements as concise and academic as possible, do not repeat the content of the previous <summary>, the value of the use of the original numbers, be sure to strictly follow the format, the corresponding content output to xxx, in accordance with \n line feed, ....... means fill in according to the actual requirements, if not, you can not write.                 
-                 """.format(self.language, self.language)},
-        ]
+        # 动态构建正则表达式，匹配包含任意关键词的标题部分
+        keyword_pattern = '|'.join(re.escape(keyword) for keyword in keywords_list)
+        regex_pattern = rf'\d?\.\s*\*?\*?(?:{keyword_pattern}).*'
 
-        # if openai.api_type == 'azure':
-        #     response = openai.ChatCompletion.create(
-        #         engine=self.chatgpt_model,
-        #         # prompt需要用英语替换，少占用token。
-        #         messages=messages,
-        #     )
-        # else:
-        #     response = openai.ChatCompletion.create(
-        #         model=self.chatgpt_model,
-        #         # prompt需要用英语替换，少占用token。
-        #         messages=messages,
-        #     )
-
-        # response = self.client.chat.completions.create(
-        #     model=self.chatgpt_model,
-        #     messages=messages,
-        #     # messages=[{"role": "user", "content": "Hello"}],
-        #     # ...
-        #     provider=g4f_provdier
-        # )
-        # result = ''
-        # for choice in response.choices:
-        #     result += choice.message.content
-        # for retry in range(3):
-        #     try:
-            #     result = self.chat(messages=messages, method='gpt-3.5-turbo')
-            # except:
-        result = self.chat(messages=messages)
-
-        # 检查结果中是否包含任何形式的 "Conclusion" 关键字
-        if not any(conclusion_keyword in result for conclusion_keyword in ['8. Conclusion', '8. 结论', "8. **Conclusion", "8. **结论"]):
-            raise Exception("Error response: No conclusion found {}".format(result))
-
-        # 合并对 "Conclusion" 和 "结论" 以及其加粗形式的匹配
-        match = re.search(r'8\.\s*\*?\*?(?:Conclusion|结论)\*?\*?:.*', result, re.DOTALL)
+        match = re.search(regex_pattern, result, re.DOTALL)
 
         if match:
-            result = match.group()
+            # 提取匹配结果并调整缩进
+            result = match.group().replace('                    ', '    ')
         else:
-            raise Exception(f"Error response: Conclusion not found in the expected format {result}")
-        if "sorry" in result:
-            logger.error("error response:\n{}".format(result))
-            raise Exception("error response")
-        # logger.info("conclusion_result:\n{}".format(result))
-        # print("prompt_token_used:", response.usage.prompt_tokens,
-        #       "completion_token_used:", response.usage.completion_tokens,
-        #       "total_token_used:", response.usage.total_tokens)
-        # print("response_time:", response.response_ms / 1000.0, 's')
-        return result
-
-    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=10),  # 增加 multiplier 和 max
-                    stop=tenacity.stop_after_attempt(10),
-                    reraise=True)
-    def chat_method(self, text, method_prompt_token=800):
-        # openai.api_key = self.chat_api_list[self.cur_api]
-        # self.cur_api += 1
-        # self.cur_api = 0 if self.cur_api >= len(self.chat_api_list) - 1 else self.cur_api
-        text_token = len(self.encoding.encode(text))
-        clip_text_index = int(len(text) * (self.max_token_num - method_prompt_token) / text_token)
-        clip_text = text[:clip_text_index]
-        messages = [
-            {"role": "system",
-             "content": "You are a researcher in the field of [" + self.key_word + "] who is good at summarizing papers using concise statements"},
-            # chatgpt 角色
-            {"role": "assistant",
-             "content": "This is the <summary> and <Method> part of an English document, where <summary> you have summarized, but the <Methods> part, I need your help to read and summarize the following questions." + clip_text},
-            # 背景知识
-            {"role": "user", "content": """                 
-                 7. Describe in detail the methodological idea of this article. Be sure to use {} answers (proper nouns need to be marked in English). For example, its steps are.
-                    - (1):...
-                    - (2):...
-                    - (3):...
-                    - .......
-                 Follow the format of the output that follows: 
-                 7. Methods: \n\n
-                    - (1):xxx;\n 
-                    - (2):xxx;\n 
-                    - (3):xxx;\n  
-                    ....... \n\n     
-                 
-                 Be sure to use {} answers (proper nouns need to be marked in English), statements as concise and academic as possible, do not repeat the content of the previous <summary>, the value of the use of the original numbers, be sure to strictly follow the format, the corresponding content output to xxx, in accordance with \n line feed, ....... means fill in according to the actual requirements, if not, you can not write.                 
-                 """.format(self.language, self.language)},
-        ]
-
-        result = self.chat(messages=messages)
-
-        # 检查结果中是否包含任何形式的"Methods"关键字
-        if not any(method_keyword in result for method_keyword in ['7. Methods', '7. 方法', "7. **Methods", "7. **方法"]):
-            logger.error(f"No method in result: {result}")
-            raise Exception("Error response: No method found")
-
-        # 合并对 "Methods" 和 "方法" 的匹配
-        match = re.search(r'7\.\s*\*?\*?(?:Methods|方法).*', result, re.DOTALL)
-
-        if match:
-            result = match.group()
-        else:
-            logger.error(f"Could not find method in result: {result}")
-            raise Exception("Error response: Method not found in the expected format")
+            logger.error(f"Could not find title in result: {result}")
+            raise Exception("Error response: Title not found in the expected format")
         
         if "sorry" in result:
             logger.error("error response:\n{}".format(result))
             raise Exception("error response")
-        
-        # logger.info("method_result:\n{}".format(result))
-        # print("prompt_token_used:", response.usage.prompt_tokens,
-        #       "completion_token_used:", response.usage.completion_tokens,
-        #       "total_token_used:", response.usage.total_tokens)
-        # print("response_time:", response.response_ms / 1000.0, 's')
         return result
-
     @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=10),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(10),
                     reraise=True)
@@ -748,79 +616,101 @@ class Reader:
                  Be sure to use {} answers (proper nouns need to be marked in English), statements as concise and academic as possible, do not have too much repetitive information, numerical values using the original numbers, be sure to strictly follow the format, the corresponding content output to xxx, in accordance with \n line feed.                 
                  """.format(self.language, self.language, self.language)},
         ]
-        # print(messages)
-        # if openai.api_type == 'azure':
-        #     response = openai.ChatCompletion.create(
-        #         engine=self.chatgpt_model,
-        #         # prompt需要用英语替换，少占用token。
-        #         messages=messages,
-        #     )
-        # else:
-        #     response = openai.ChatCompletion.create(
-        #         model=self.chatgpt_model,
-        #         # prompt需要用英语替换，少占用token。
-        #         messages=messages,
-        #     )
-        
-        # response = self.client.chat.completions.create(
-        #     model=self.chatgpt_model,
-        #     messages=messages,
-        #     # messages=[{"role": "user", "content": "Hello"}],
-        #     # ...
-        #     provider=g4f_provdier
-        # )
-    
-        # result = ''
-        # for choice in response.choices:
-        # #     result += choice.message.content
-        # for retry in range(3):
-        #     try:
-            #     result = self.chat(messages=messages, method='gpt-3.5-turbo')
-            # except:
 
-        result = self.chat(messages=messages)
-
+        result = self.chat(messages=messages, method=self.chatgpt_model)
         # 检查结果中是否包含任何形式的标题关键字
         if not any(title_keyword in result for title_keyword in ['1. Title', '1. 标题', "1. **Title", "1. **标题"]):
             logger.error(f"No title in result: {result}")
             raise Exception("Error response: No title found")
 
-        # 更新正则表达式，处理加粗的标题格式
-        match = re.search(r'1\.\s*\*?\*?(?:Title|标题).*', result, re.DOTALL)
-
-        if match:
-            result = match.group()
-        else:
-            logger.error(f"Could not find title in result: {result}")
-            raise Exception("Error response: Title not found in the expected format")
-
-           
-        
-        if "sorry" in result:
-            logger.error("error response:\n{}".format(result))
-            raise Exception("error response")
-        # logger.info("summary_result:\n{}",format(result))
-        # print(dir(response))
-        # print("prompt_token_used:", response.usage.prompt_tokens,
-        #       "completion_token_used:", response.usage.completion_tokens,
-        #       "total_token_used:", response.usage.total_tokens)
-        # print("response_time:", response.response_ms / 1000.0, 's')
+        result = self.validResponse(result, keywords_list=['Title', '标题'])
         return result
 
-    def export_to_markdown(self, text, file_name, mode='w'):
-        # 使用markdown模块的convert方法，将文本转换为html格式
-        # html = markdown.markdown(text)
-        # 打开一个文件，以写入模式
-        with open(file_name, mode, encoding="utf-8") as f:
-            # 将html格式的内容写入文件
-            f.write(text)
+    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=10),  # 增加 multiplier 和 max
+                    stop=tenacity.stop_after_attempt(10),
+                    reraise=True)
+    def chat_method(self, text, method_prompt_token=800):
+        # openai.api_key = self.chat_api_list[self.cur_api]
+        # self.cur_api += 1
+        # self.cur_api = 0 if self.cur_api >= len(self.chat_api_list) - 1 else self.cur_api
+        text_token = len(self.encoding.encode(text))
+        clip_text_index = int(len(text) * (self.max_token_num - method_prompt_token) / text_token)
+        clip_text = text[:clip_text_index]
+        messages = [
+            {"role": "system",
+             "content": "You are a researcher in the field of [" + self.key_word + "] who is good at summarizing papers using concise statements"},
+            # chatgpt 角色
+            {"role": "assistant",
+             "content": "This is the <summary> and <Method> part of an English document, where <summary> you have summarized, but the <Methods> part, I need your help to read and summarize the following questions." + clip_text},
+            # 背景知识
+            {"role": "user", "content": """                 
+                 7. Describe in detail the methodological idea of this article. Be sure to use {} answers (proper nouns need to be marked in English). For example, its steps are.
+                    - (1):...
+                    - (2):...
+                    - (3):...
+                    - .......
+                 Follow the format of the output that follows: 
+                 7. Methods: \n\n
+                    - (1):xxx;\n 
+                    - (2):xxx;\n 
+                    - (3):xxx;\n  
+                    ....... \n\n     
+                 
+                 Be sure to use {} answers (proper nouns need to be marked in English), statements as concise and academic as possible, do not repeat the content of the previous <summary>, the value of the use of the original numbers, be sure to strictly follow the format, the corresponding content output to xxx, in accordance with \n line feed, ....... means fill in according to the actual requirements, if not, you can not write.                 
+                 """.format(self.language, self.language)},
+        ]
 
-            # 定义一个方法，打印出读者信息
+        result = self.chat(messages=messages, method=self.chatgpt_model)
 
-    def show_info(self):
-        logger.info(f"Key word: {self.key_word}")
-        logger.info(f"Query: {self.query}")
-        logger.info(f"Sort: {self.sort}")
+        # 检查结果中是否包含任何形式的"Methods"关键字
+        if not any(method_keyword in result for method_keyword in ['7. Methods', '7. 方法', "7. **Methods", "7. **方法"]):
+            logger.error(f"No method in result: {result}")
+            raise Exception("Error response: No method found")
+
+        result = self.validResponse(result, keywords_list=['Methods', '方法'])
+
+        return result
+
+    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=10),  # 增加 multiplier 和 max
+                    stop=tenacity.stop_after_attempt(10),
+                    reraise=True)
+    def chat_conclusion(self, text, conclusion_prompt_token=800):
+        # openai.api_key = self.chat_api_list[self.cur_api]
+        # self.cur_api += 1
+        # self.cur_api = 0 if self.cur_api >= len(self.chat_api_list) - 1 else self.cur_api
+        text_token = len(self.encoding.encode(text))
+        clip_text_index = int(len(text) * (self.max_token_num - conclusion_prompt_token) / text_token)
+        clip_text = text[:clip_text_index]
+
+        messages = [
+            {"role": "system",
+             "content": "You are a reviewer in the field of [" + self.key_word + "] and you need to critically review this article"},
+            # chatgpt 角色
+            {"role": "assistant",
+             "content": "This is the <summary> and <conclusion> part of an English literature, where <summary> you have already summarized, but <conclusion> part, I need your help to summarize the following questions:" + clip_text},
+            # 背景知识，可以参考OpenReview的审稿流程
+            {"role": "user", "content": """                 
+                 8. Make the following summary.Be sure to use {} answers (proper nouns need to be marked in English).
+                    - (1):What is the significance of this piece of work?
+                    - (2):Summarize the strengths and weaknesses of this article in three dimensions: innovation point, performance, and workload.                   
+                    .......
+                 Follow the format of the output later: 
+                 8. Conclusion: \n\n
+                    - (1):xxx;\n                     
+                    - (2):Innovation point: xxx; Performance: xxx; Workload: xxx;\n                      
+                 
+                 Be sure to use {} answers (proper nouns need to be marked in English), statements as concise and academic as possible, do not repeat the content of the previous <summary>, the value of the use of the original numbers, be sure to strictly follow the format, the corresponding content output to xxx, in accordance with \n line feed, ....... means fill in according to the actual requirements, if not, you can not write.                 
+                 """.format(self.language, self.language)},
+        ]
+        result = self.chat(messages=messages, method=self.chatgpt_model)
+
+        # 检查结果中是否包含任何形式的 "Conclusion" 关键字
+        if not any(conclusion_keyword in result for conclusion_keyword in ['8. Conclusion', '8. 结论', "8. **Conclusion", "8. **结论"]):
+            raise Exception("Error response: No conclusion found {}".format(result))
+
+        result = self.validResponse(result, keywords_list=['Conclusion', '结论'])
+
+        return result
 
     @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(5),
@@ -870,11 +760,36 @@ class Reader:
                 result += choice.message.content
             if 'sorry' in result:
                 raise Exception("error response")
+        elif method == 'chatglm_langchain':
+            from langchain.prompts import ChatPromptTemplate
+            from langchain.chat_models import ChatOpenAI
+            from langchain.schema.output_parser import StrOutputParser
 
+            model = ChatOpenAI(
+                api_key="52540d82a6e27215c12fa262724a5a12.HNZqSwjBWTuEtHuQ",
+                base_url="https://open.bigmodel.cn/api/paas/v4/",
+                model="glm-4-flash",  
+            )
+
+            chain = model | StrOutputParser()
+            result = chain.invoke(messages)
 
         return result
 
+    def export_to_markdown(self, text, file_name, mode='w'):
+        # 使用markdown模块的convert方法，将文本转换为html格式
+        # html = markdown.markdown(text)
+        # 打开一个文件，以写入模式
+        with open(file_name, mode, encoding="utf-8") as f:
+            # 将html格式的内容写入文件
+            f.write(text)
 
+            # 定义一个方法，打印出读者信息
+
+    def show_info(self):
+        logger.info(f"Key word: {self.key_word}")
+        logger.info(f"Query: {self.query}")
+        logger.info(f"Sort: {self.sort}")
 
 def chat_paper_main(args):
     # 创建一个Reader对象，并调用show_info方法
@@ -906,9 +821,10 @@ def chat_paper_main(args):
                     if filename.endswith(".pdf"):
                         paper_list.append(Paper(path=os.path.join(root, filename)))
         print("------------------paper_num: {}------------------".format(len(paper_list)))
-        for paper in paper_list:
-            paper.get_image_path('export')
-        [print(paper_index, paper_name.path.split('\\')[-1]) for paper_index, paper_name in enumerate(paper_list)]
+        # os.makedirs("export", exist_ok=True)
+        # for paper in paper_list:
+        #     paper.get_image_path('export')
+        # [print(paper_index, paper_name.path.split('\\')[-1]) for paper_index, paper_name in enumerate(paper_list)]
         reader1.summary_with_chat(paper_list=paper_list)
     else:
         reader1 = Reader(key_word=args.key_word,
@@ -927,7 +843,7 @@ def chat_paper_main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--chatgpt_model", type=str, default='chatglm', help="the chatgpt model name")
-    parser.add_argument("--pdf_path", type=str, default=r'D:\MyBlog\AutoFX\demo.pdf', help="if none, the bot will download from arxiv with query")
+    parser.add_argument("--pdf_path", type=str, default=r'demo.pdf', help="if none, the bot will download from arxiv with query")
     # parser.add_argument("--pdf_path", type=str, default=r'C:\Users\Administrator\Desktop\DHER\RHER_Reset\ChatPaper', help="if none, the bot will download from arxiv with query")
     # parser.add_argument("--pdf_path", type=str, default='', help="if none, the bot will download from arxiv with query")
     parser.add_argument("--query", type=str, default='all: ChatGPT robot',

@@ -107,7 +107,7 @@ access_token = get_access_token(api_key, secret_key)
 @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(10),
                     reraise=True)
-def gpt_gen(prompt, method='gemini', key_name=''):
+def gpt_gen(prompt, method='chatglm', key_name=''):
     if method=='chatgpt':
         messages = [{'role': 'user','content': prompt},]
         
@@ -226,7 +226,36 @@ def gpt_gen(prompt, method='gemini', key_name=''):
                 
         response = response.text
         return response
+    elif method == 'chatglm':
+        message = summary_prompt % (key_name, prompt)
+        messages = [
+            {"role": "system",
+             "content": "You are a researcher in the field of [" + key_name + "] who is good at summarizing papers using concise statements"},
+            {'role': 'user','content': message},]
+        from zhipuai import ZhipuAI
+        client = ZhipuAI(api_key="52540d82a6e27215c12fa262724a5a12.HNZqSwjBWTuEtHuQ") # 填写您自己的APIKey
+        response = client.chat.completions.create(
+            model="glm-4-flash",  # 填写需要调用的模型编码
+            messages = messages,
+        )
+        response = response.choices[0].message.content
+        if 'sorry' in response:
+            raise Exception("chatglm error")
+        result = response
+        if not any(keywork not in result for keywork in ['**Summary', 'Summary', '总结', '摘要', '**摘要', '**总结']):
+            logger.error(f"error, didn't find Summary {result}")
+            raise Exception("chatglm error")
 
+        # match = re.search(r'\*\*Summary(.*)', result, re.DOTALL)
+        # 合并对 "Summary"、"总结" 和 "摘要" 以及其加粗形式的匹配
+        match = re.search(r'\*?\*?(?:Summary|总结|摘要).*', result, re.DOTALL)
+
+        if match:
+            return match.group()
+        else:
+            logger.error(f"error, didn't find **Summary** {result}")
+            raise Exception("summary error")
+            return response
 @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(10),
                     reraise=True)
@@ -242,7 +271,7 @@ def typing(item, img_dir, key_name, daily=False):
     # except:
     #     gptsummary1 = gpt_gen(summary, 'gemini', key_name)
     try:
-        gptsummary1 = gpt_gen(summary, 'gpt4free', key_name)
+        gptsummary1 = gpt_gen(summary, 'chatglm', key_name)
     except:
         gptsummary1 = gpt_gen(summary, 'ernie', key_name)
 

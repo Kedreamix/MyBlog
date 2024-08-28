@@ -469,7 +469,7 @@ class Reader:
 
             logger.info("Summary:\n{}".format(chat_summary_text))
             # htmls.append('## Paper:' + str(paper_index + 1))
-            htmls.append('\n\n\n')
+            htmls.append('\n')
             htmls.append(chat_summary_text)
 
             # 第二步总结方法：
@@ -509,7 +509,7 @@ class Reader:
                 logger.info("Method:\n{}".format("No method found"))
                 chat_method_text = ''
             logger.info("Method:\n{}".format(chat_method_text))
-            htmls.append("\n" * 4)
+            htmls.append("\n")
 
                
             # 第三步总结全文，并打分：
@@ -548,7 +548,7 @@ class Reader:
             
             logger.info("Conclusion:\n{}".format(chat_conclusion_text))
             htmls.append(chat_conclusion_text)
-            htmls.append("\n" * 4)
+            htmls.append("\n")
 
             # # 整合成一个文件，打包保存下来。
             date_str = str(datetime.datetime.now())[:13].replace(' ', '-')
@@ -623,7 +623,7 @@ class Reader:
         #     try:
             #     result = self.chat(messages=messages, method='gpt-3.5-turbo')
             # except:
-        result = self.chat(messages=messages, method='ernie')
+        result = self.chat(messages=messages)
 
         # 检查结果中是否包含任何形式的 "Conclusion" 关键字
         if not any(conclusion_keyword in result for conclusion_keyword in ['8. Conclusion', '8. 结论', "8. **Conclusion", "8. **结论"]):
@@ -680,7 +680,7 @@ class Reader:
                  """.format(self.language, self.language)},
         ]
 
-        result = self.chat(messages=messages, method='ernie')
+        result = self.chat(messages=messages)
 
         # 检查结果中是否包含任何形式的"Methods"关键字
         if not any(method_keyword in result for method_keyword in ['7. Methods', '7. 方法', "7. **Methods", "7. **方法"]):
@@ -778,7 +778,7 @@ class Reader:
             #     result = self.chat(messages=messages, method='gpt-3.5-turbo')
             # except:
 
-        result = self.chat(messages=messages, method='ernie')
+        result = self.chat(messages=messages)
 
         # 检查结果中是否包含任何形式的标题关键字
         if not any(title_keyword in result for title_keyword in ['1. Title', '1. 标题', "1. **Title", "1. **标题"]):
@@ -825,7 +825,7 @@ class Reader:
     @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(5),
                     reraise=True)
-    def chat(self, messages, method = 'gpt-3.5-turbo'):
+    def chat(self, messages, method = 'chatglm'):
         if method == 'gpt-3.5-turbo':
             client = self.client = Client()
             response = client.chat.completions.create(
@@ -858,6 +858,19 @@ class Reader:
             response = requests.post(url, headers=headers, data=payload)
             response_json = response.json()
             result = response_json['result']
+        elif method == 'chatglm':
+            from zhipuai import ZhipuAI
+            client = ZhipuAI(api_key="52540d82a6e27215c12fa262724a5a12.HNZqSwjBWTuEtHuQ") # 填写您自己的APIKey
+            response = client.chat.completions.create(
+                model="glm-4-flash",  # 填写需要调用的模型编码
+                messages=messages
+            )
+            result = ''
+            for choice in response.choices:
+                result += choice.message.content
+            if 'sorry' in result:
+                raise Exception("error response")
+
 
         return result
 
@@ -913,7 +926,7 @@ def chat_paper_main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--chatgpt_model", type=str, default='ernie', help="the chatgpt model name")
+    parser.add_argument("--chatgpt_model", type=str, default='chatglm', help="the chatgpt model name")
     parser.add_argument("--pdf_path", type=str, default=r'D:\MyBlog\AutoFX\demo.pdf', help="if none, the bot will download from arxiv with query")
     # parser.add_argument("--pdf_path", type=str, default=r'C:\Users\Administrator\Desktop\DHER\RHER_Reset\ChatPaper', help="if none, the bot will download from arxiv with query")
     # parser.add_argument("--pdf_path", type=str, default='', help="if none, the bot will download from arxiv with query")

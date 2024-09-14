@@ -230,7 +230,61 @@ sudo chmod a+r /usr/local/cuda-11.2/include/*
 出现问题：Error 'An NVIDIA kernel module 'nvidia' appears to already be loaded in your kernel' when trying to get GPU support in AWS EMR
 [https://unix.stackexchange.com/questions/440840/how-to-unload-kernel-module-nvidia-drm](https://unix.stackexchange.com/questions/440840/how-to-unload-kernel-module-nvidia-drm)
 
+# CUDA驱动更新
 
+当用户需要使用当前驱动不能支持的高版本cuda时，需要将机器显卡驱动更新到新版本，用户在自己环境下安装对应的cudatoolkit即可使用。
+
+在更新驱动之前需要保证显卡上没有程序在运行，并且驱动也没有在被使用，可以通过fuser -v /dev/nvidia*查看。
+
+```bash
+fuser -v /dev/nvidia*
+```
+
+1、用户程序，通知用户停止。
+
+2、系统程序（部分机器存在）
+
+![img](https://cdn.nlark.com/yuque/0/2024/png/36082246/1708691624133-25fcd177-1949-4336-a748-dbd14511c687.png)
+
+```bash
+systemctl stop nvidia-persistenced.service
+```
+
+![img](https://cdn.nlark.com/yuque/0/2024/png/36082246/1708691785307-7f61dc00-d373-4a7e-855a-d65f02e5c543.png)
+
+```bash
+systemctl stop dcgm
+systemctl stop nvidia-dcgm
+# sudo nv-hostengine -t
+```
+
+![img](https://cdn.nlark.com/yuque/0/2024/png/36082246/1708691843452-8c7976b2-6b68-4c91-bcf3-3d138a57760f.png)
+
+```bash
+systemctl stop nvsm.service
+```
+
+当显卡上没有程序运行时，开始更新驱动。
+
+```bash
+Using built-in stream user interface
+-> Detected 12 CPUs online; setting concurrency level to 12.
+-> The file '/tmp/.X0-lock' exists and appears to contain the process ID '1056' of a running X server.
+ERROR: You appear to be running an X server; please exit X before installing.  For further details, please see the section INSTALLING THE NVIDIA DRIVER in the README available on the Linux driver download page at www.nvidia.com.
+ERROR: Installation has failed.  Please see the file '/var/log/nvidia-installer.log' for details.  You may find suggestions on fixing installation problems in the README available on the Linux driver download page at www.nvidia.com.
+```
+
+解决
+
+sudo service lightdm stop
+
+安装完之后
+
+sudo service lightdm start
+
+更新完驱动之后需要恢复相应服务。
+
+ Linux环境变量的加载顺序： **/etc/profile -> ~/.bash_profile -> ~/.bashrc -> /etc/bashrc -> ~/.bash_logout**
 
 # 参考
 

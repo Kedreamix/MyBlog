@@ -350,6 +350,7 @@ class Reader:
                                    top_p=p,
                                    model_name=model_name,
                                    proxy=proxy)  #openAI api封装
+        self.model_name = model_name
         self.user_name = user_name  # 读者姓名
         self.key_word = key_word  # 读者感兴趣的关键词
         self.query = query  # 读者输入的搜索查询
@@ -453,47 +454,47 @@ class Reader:
     def try_download_pdf(self, result, path, pdf_name):
         result.download_pdf(path, filename=pdf_name)
 
-    @tenacity.retry(wait=tenacity.wait_exponential(multiplier=1, min=4,
-                                                   max=10),
-                    stop=tenacity.stop_after_attempt(5),
-                    reraise=True)
-    def upload_gitee(self, image_path, image_name='', ext='png'):
-        """
-        上传到码云
-        :return:
-        """
-        with open(image_path, 'rb') as f:
-            base64_data = base64.b64encode(f.read())
-            base64_content = base64_data.decode()
+    # @tenacity.retry(wait=tenacity.wait_exponential(multiplier=1, min=4,
+    #                                                max=10),
+    #                 stop=tenacity.stop_after_attempt(5),
+    #                 reraise=True)
+    # def upload_gitee(self, image_path, image_name='', ext='png'):
+    #     """
+    #     上传到码云
+    #     :return:
+    #     """
+    #     with open(image_path, 'rb') as f:
+    #         base64_data = base64.b64encode(f.read())
+    #         base64_content = base64_data.decode()
 
-        date_str = str(datetime.datetime.now())[:19].replace(':', '-').replace(
-            ' ', '-') + '.' + ext
-        path = image_name + '-' + date_str
+    #     date_str = str(datetime.datetime.now())[:19].replace(':', '-').replace(
+    #         ' ', '-') + '.' + ext
+    #     path = image_name + '-' + date_str
 
-        payload = {
-            "access_token": self.gitee_key,
-            "owner": self.config.get('Gitee', 'owner'),
-            "repo": self.config.get('Gitee', 'repo'),
-            "path": self.config.get('Gitee', 'path'),
-            "content": base64_content,
-            "message": "upload image"
-        }
-        # 这里需要修改成你的gitee的账户和仓库名，以及文件夹的名字：
-        url = f'https://gitee.com/api/v5/repos/' + self.config.get(
-            'Gitee', 'owner') + '/' + self.config.get(
-                'Gitee', 'repo') + '/contents/' + self.config.get(
-                    'Gitee', 'path') + '/' + path
-        rep = requests.post(url, json=payload).json()
-        print("rep:", rep)
-        if 'content' in rep.keys():
-            image_url = rep['content']['download_url']
-        else:
-            image_url = r"https://gitee.com/api/v5/repos/" + self.config.get(
-                'Gitee', 'owner') + '/' + self.config.get(
-                    'Gitee', 'repo') + '/contents/' + self.config.get(
-                        'Gitee', 'path') + '/' + path
+    #     payload = {
+    #         "access_token": self.gitee_key,
+    #         "owner": self.config.get('Gitee', 'owner'),
+    #         "repo": self.config.get('Gitee', 'repo'),
+    #         "path": self.config.get('Gitee', 'path'),
+    #         "content": base64_content,
+    #         "message": "upload image"
+    #     }
+    #     # 这里需要修改成你的gitee的账户和仓库名，以及文件夹的名字：
+    #     url = f'https://gitee.com/api/v5/repos/' + self.config.get(
+    #         'Gitee', 'owner') + '/' + self.config.get(
+    #             'Gitee', 'repo') + '/contents/' + self.config.get(
+    #                 'Gitee', 'path') + '/' + path
+    #     rep = requests.post(url, json=payload).json()
+    #     print("rep:", rep)
+    #     if 'content' in rep.keys():
+    #         image_url = rep['content']['download_url']
+    #     else:
+    #         image_url = r"https://gitee.com/api/v5/repos/" + self.config.get(
+    #             'Gitee', 'owner') + '/' + self.config.get(
+    #                 'Gitee', 'repo') + '/contents/' + self.config.get(
+    #                     'Gitee', 'path') + '/' + path
 
-        return image_url
+    #     return image_url
 
 
     def summary_with_chat(self, paper_list):
@@ -687,7 +688,7 @@ class Reader:
         )  # chatgpt 角色
         self.chatPaper.add_to_conversation_last(
             convo_id="chatMethod",
-            role="user",
+            role="user", # assistant
             message=str(
                 "This is the <summary> and <Method> part of an English document, where <summary> you have summarized, but the <Methods> part, I need your help to read and summarize the following questions."
                 + clip_text))

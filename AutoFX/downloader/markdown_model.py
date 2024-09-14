@@ -131,24 +131,7 @@ def gpt_gen(prompt, method='chatglm', key_name=''):
             messages = messages,
             provider=g4f.Provider.Liaobots
         )
-        response = response.choices[0].message.content
-        if 'sorry' in response:
-            raise Exception("gpt4free error")
-        result = response
-        if not any(keywork not in result for keywork in ['**Summary', 'Summary', '总结', '摘要', '**摘要', '**总结']):
-            logger.error(f"error, didn't find Summary {result}")
-            raise Exception("ernie error")
-
-        # match = re.search(r'\*\*Summary(.*)', result, re.DOTALL)
-        # 合并对 "Summary"、"总结" 和 "摘要" 以及其加粗形式的匹配
-        match = re.search(r'\*?\*?(?:Summary|总结|摘要).*', result, re.DOTALL)
-
-        if match:
-            return match.group()
-        else:
-            logger.error(f"error, didn't find **Summary** {result}")
-            raise Exception("summary error")
-            return response
+        result = response.choices[0].message.content
     elif method == 'ernie':
         message = summary_prompt % (key_name, prompt)
         url = f"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k?access_token={access_token}"
@@ -167,20 +150,6 @@ def gpt_gen(prompt, method='chatglm', key_name=''):
         response = requests.post(url, headers=headers, data=payload)
         response_json = response.json()
         result = response_json['result']
-        if not any(keywork not in result for keywork in ['**Summary', 'Summary', '总结', '摘要', '**摘要', '**总结']):
-            logger.error(f"error, didn't find Summary {result}")
-            raise Exception("ernie error")
-
-        # match = re.search(r'\*\*Summary(.*)', result, re.DOTALL)
-        # 合并对 "Summary"、"总结" 和 "摘要" 以及其加粗形式的匹配
-        match = re.search(r'\*?\*?(?:Summary|总结|摘要).*', result, re.DOTALL)
-
-        if match:
-            return match.group()
-        else:
-            logger.error(f"error, didn't find **Summary** {result}")
-            raise Exception("summary error")
-            # print(result)
     elif method == 'gemini':
         message = summary_prompt % (key_name, prompt)
         os.environ['https_proxy'] = proxy_gpt['https']
@@ -224,8 +193,7 @@ def gpt_gen(prompt, method='chatglm', key_name=''):
                 break
                 
                 
-        response = response.text
-        return response
+        result = response.text
     elif method == 'chatglm':
         message = summary_prompt % (key_name, prompt)
         messages = [
@@ -255,7 +223,21 @@ def gpt_gen(prompt, method='chatglm', key_name=''):
         else:
             logger.error(f"error, didn't find **Summary** {result}")
             raise Exception("summary error")
-            return response
+    
+    if 'sorry' in result:
+        raise Exception("llm error")
+    
+    if not any(keywork not in result for keywork in ['**Summary', 'Summary', '总结', '摘要', '**摘要', '**总结']):
+        logger.error(f"error, didn't find Summary {result}")
+        raise Exception("llm error")
+
+    match = re.search(r'\*?\*?(?:Summary|总结|摘要).*', result, re.DOTALL)
+
+    if match:
+        return match.group()
+    else:
+        logger.error(f"error, didn't find **Summary** {result}")
+        raise Exception("summary error")
 @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(10),
                     reraise=True)
@@ -266,10 +248,6 @@ def typing(item, img_dir, key_name, daily=False):
     for a in authors:
         auth = auth + a + ', '
     auth = auth[:-2]
-    # try:
-    #     gptsummary1 = gpt_gen(summary, 'chatgpt', key_name)
-    # except:
-    #     gptsummary1 = gpt_gen(summary, 'gemini', key_name)
     try:
         gptsummary1 = gpt_gen(summary, 'chatglm', key_name)
     except:

@@ -1,7 +1,7 @@
 # =============== 网络代理 ================
 # proxy = None
-proxy = {"http": "socks5://127.0.0.1:7890", "https": "socks5://127.0.0.1:7890"}
-proxy_gpt = {"http": "http://127.0.0.1:7890", "https": "http://127.0.0.1:7890"}
+proxy = {"http": "socks5://127.0.0.1:7891", "https": "socks5://127.0.0.1:7891"}
+proxy_gpt = {"http": "http://127.0.0.1:7891", "https": "http://127.0.0.1:7891"}
 # =============== 保存文件根目录 ================
 root_path = r"D:\MyBlog\AutoFX\arxiv"
 # root_blog = "/home/ubuntu/blogs/source/_posts"
@@ -57,7 +57,29 @@ summary_prompt = '''User
     %s
     ```
     '''
+# summary_prompt = '''User
+#     Ignore all previous instructions. Your new role is an exceptional bilingual expert researcher fluent in both English and Simplified Chinese, specializing in the field of [ %s ]. You excel at summarizing academic papers and distilling complex content into essential elements.
 
+#     You will be provided with a specific text excerpt framed within triple backticks. Your tasks are:
+    
+#     1. **Summary**: Write a one-line summary in Simplified Chinese that captures the core message of the text. This summary should be concise and no longer than 200 characters.
+#     2. **Key Takeaways**: Identify and list up to seven significant insights from the text as bullet points, also in Simplified Chinese. Focus on clarity and brevity, highlighting the most crucial points.
+
+#     Your response should be formatted as follows:
+
+#     **Summary**
+#     <summary of the text>
+
+#     **Key Takeaways**
+#     <list of key takeaways>
+
+#     Ensure your analysis is sharp and incisive, capturing both the main message and any subtle nuances of the text, while strictly adhering to the requested format.
+
+#     Text:
+#     ```
+#     %s
+#     ```
+#     '''
 
 
 keep_subjects = ['cs.CV', 'cs.AI', 'cs.LG', 'cs.CL', 'eess.AS']
@@ -92,28 +114,29 @@ keywords_dict = {
     # 'GAN': ['abs:image+AND+abs:GAN', 
     #         'abs:StyleGAN+OR+abs:StyleGAN2+OR+abs:StyleGAN3'],
    
-    '元宇宙/虚拟人': ['ti:"Virtual Avatar"+OR+ti:"Virtual Avatar"', 
-                'ti:Metaverse', 
-                'ti:Avatar'],
-    'Talking Head Generation': [
-        'abs:"Talking Head"+OR+ti:"Talking Head"+OR+ti:Talk',
-        'all:"Talking Portrait"+OR+all:"Talking Face"+OR+all:"Talking Human"+OR+all:"talking avatar"+OR+all:"talking video"',
-        'all:"Speech Driven"+OR+all:"Audio driven"',
-        '(all:"Talking Head"+OR+all:"Talking Face"+OR+all:"Audio driven"+OR+all:"Talking Portrait"+OR+all:"Speech Driven"+OR+all:"talking avatar"+OR+all:"talking video")+AND+(ti:NeRF+OR+ti:"Neural Radiance")',
-        '(all:"Talking Head"+OR+all:"Talking Face"+OR+all:"Audio driven"+OR+all:"Talking Portrait"+OR+all:"Speech Driven"+OR+all:"talking avatar"+OR+all:"talking video")+AND+(ti:Diffusion+OR+ti:Diffuse)',
-        '(all:"Talking Head"+OR+all:"Talking Face"+OR+all:"Audio driven"+OR+all:"Talking Portrait"+OR+all:"Speech Driven"+OR+all:"talking avatar"+OR+all:"talking video")+AND+(all:"Gaussian Splatting")',
-        'ti:Talker+OR+ti:Talk',
-    ],
-    "3DGS": ['ti:"Gaussian Splatting"+OR+abs:"Gaussian Splatting"+OR+ti:"3D Gaussian"+OR+abs:"3D Gaussian"', 
-                            '(ti:"Gaussian Splatting"+OR+abs:"Gaussian Splatting")+AND+(ti:Head+OR+ti:Avatar+OR+ti:Human)'],
-    'NeRF': ['ti:NeRF', 'ti:NeRF+AND+(all:Face+OR+all:Human+OR+all:Avatar+OR+all:Head)', 
-                'abs:"Neural Radiance Field"+OR+ti:"Neural Radiance"', 
-                'ti:GAN NeRF'],
-    'Diffusion Models': ['abs:"Diffusion Model"+AND+abs:"Image"',
-                        #  'ti:"generative"+OR+abs:"score-base"',
-                        #  'ti:"Diffusion"+OR+abs:"score-base"',
-                            'ti:"diffusion model"+AND+ti:"style transfer"+OR+all:"medical image translation"',
-                            'ti:"diffusion model"+AND+ti:"style transfer"'],
+    # '元宇宙/虚拟人': ['ti:"Virtual Avatar"+OR+ti:"Virtual Avatar"', 
+    #             'ti:Metaverse', 
+    #             'ti:Avatar'],
+    # 'Talking Head Generation': [
+    #     'abs:"Talking Head"+OR+ti:"Talking Head"+OR+ti:Talk',
+    #     'all:"Talking Portrait"+OR+all:"Talking Face"+OR+all:"Talking Human"+OR+all:"talking avatar"+OR+all:"talking video"',
+    #     'all:"Speech Driven"+OR+all:"Audio driven"',
+    #     '(all:"Talking Head"+OR+all:"Talking Face"+OR+all:"Audio driven"+OR+all:"Talking Portrait"+OR+all:"Speech Driven"+OR+all:"talking avatar"+OR+all:"talking video")+AND+(ti:NeRF+OR+ti:"Neural Radiance")',
+    #     '(all:"Talking Head"+OR+all:"Talking Face"+OR+all:"Audio driven"+OR+all:"Talking Portrait"+OR+all:"Speech Driven"+OR+all:"talking avatar"+OR+all:"talking video")+AND+(ti:Diffusion+OR+ti:Diffuse)',
+    #     '(all:"Talking Head"+OR+all:"Talking Face"+OR+all:"Audio driven"+OR+all:"Talking Portrait"+OR+all:"Speech Driven"+OR+all:"talking avatar"+OR+all:"talking video")+AND+(all:"Gaussian Splatting")',
+    #     'ti:Talker+OR+ti:Talk',
+    # ],
+    # "3DGS": ['ti:"Gaussian Splatting"+OR+abs:"Gaussian Splatting"+OR+ti:"3D Gaussian"+OR+abs:"3D Gaussian"', 
+    #                         '(ti:"Gaussian Splatting"+OR+abs:"Gaussian Splatting")+AND+(ti:Head+OR+ti:Avatar+OR+ti:Human)'],
+    # 'NeRF': ['ti:NeRF', 'ti:NeRF+AND+(all:Face+OR+all:Human+OR+all:Avatar+OR+all:Head)', 
+    #             'abs:"Neural Radiance Field"+OR+ti:"Neural Radiance"', 
+    #             'ti:GAN NeRF'],
+    # 'Diffusion Models': ['abs:"Diffusion Model"+AND+abs:"Image"',
+    #                     #  'ti:"generative"+OR+abs:"score-base"',
+    #                     #  'ti:"Diffusion"+OR+abs:"score-base"',
+    #                         'ti:"diffusion model"+AND+ti:"style transfer"+OR+all:"medical image translation"',
+    #                         'ti:"diffusion model"+AND+ti:"style transfer"'],
+    
     # '3D reconstruction': ['all:"surface reconstruction"+OR+all:"shape reconstruction"+OR+all:"texture reconstruction"',
     #                         'all:"human object interaction reconstruction"+OR+all:"hand-object interaction reconstruction"+OR+all:"human reconstruction"+OR+all:"object reconstruction"',
     #                         'all:"shape generation"+OR+all:"shape synthesis"',
@@ -123,6 +146,21 @@ keywords_dict = {
     #                         '(ti:Diffusion+OR+ti:Diffuse)+AND+(all:"surface reconstruction"+OR+all:"shape reconstruction"+OR+all:"texture reconstruction")',
     #                         'all:"Gaussian Splatting"+AND+(all:"surface reconstruction"+OR+all:"shape reconstruction"+OR+all:"texture reconstruction")',
     #                     ],
+
+    '牙齿修复': ['abs:dental+AND+abs:imaging', 
+             'ti:dental+AND+ti:restoration', 
+             'ti:tooth+AND+ti:repair', 
+             'all:"dental imaging"+OR+all:"tooth restoration"+OR+all:"dental surgery"+OR+all:"tooth repair"', 
+             'all:"dental reconstruction"+OR+all:"restorative dentistry"+OR+all:"endodontic"+OR+all:"periodontal"', 
+             'ti:"dental restoration"+OR+ti:"tooth repair"+OR+ti:"restorative dentistry"'
+             ],
+
+    '医学图像': ['ti:"Medical Image"+OR+ti:"Biomedical Image"+OR+ti:"Radiology"',
+            'all:"Image Segmentation"+OR+all:"Image Registration"+OR+all:"Image Reconstruction"',
+            'all:"MRI"+OR+all:"CT"+OR+all:"X-ray"+OR+all:"Ultrasound"',
+            'ti:"Disease Detection"+OR+ti:"Tumor"+OR+ti:"Cancer"',
+            'ti:"Image Analysis"+OR+ti:"Computer-Aided Diagnosis"+OR+ti:"CAD"']
+
 }
 
 

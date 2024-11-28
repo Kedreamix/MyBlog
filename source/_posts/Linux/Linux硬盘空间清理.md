@@ -1,3 +1,17 @@
+---
+title: Linux 硬盘空间清理
+date: 2024-01-01 00:00:00
+author: Kedreamix
+cover: 
+categories: Linux
+tags:
+    - Linux
+toc:
+toc_number: false
+toc_style_simple: true
+
+---
+
 # Linux 硬盘空间清理
 
 ## 0. 删除Docker一些无用的镜像

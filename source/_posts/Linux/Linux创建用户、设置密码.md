@@ -98,7 +98,8 @@ cat /etc/passwd
 
 ```bash
 ssh-keygen
-cd .ssh
+# ssh-keygen -m PEM -t rsa -b 4096
+cd ~/.ssh
 cat id_rsa.pub >> authorized_keys
 chmod 600 authorized_keys
 chmod 700 ~/.ssh
@@ -113,8 +114,9 @@ sudo usermod -aG sudo username
 sudo cat /etc/sudoers
 ```
 
-| 增加权限 | sudo gpasswd -a mumbly sudo |
+| 功能     | 命令                        |
 | -------- | --------------------------- |
+| 增加权限 | sudo gpasswd -a mumbly sudo |
 | 删除权限 | sudo gpasswd -d mumbly sudo |
 
 

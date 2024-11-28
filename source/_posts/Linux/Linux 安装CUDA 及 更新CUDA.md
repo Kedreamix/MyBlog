@@ -234,7 +234,7 @@ sudo chmod a+r /usr/local/cuda-11.2/include/*
 
 当用户需要使用当前驱动不能支持的高版本cuda时，需要将机器显卡驱动更新到新版本，用户在自己环境下安装对应的cudatoolkit即可使用。
 
-在更新驱动之前需要保证显卡上没有程序在运行，并且驱动也没有在被使用，可以通过fuser -v /dev/nvidia*查看。
+在更新驱动之前需要保证显卡上没有程序在运行，并且驱动也没有在被使用，可以通过`fuser -v /dev/nvidia*`查看。
 
 ```bash
 fuser -v /dev/nvidia*
@@ -244,13 +244,13 @@ fuser -v /dev/nvidia*
 
 2、系统程序（部分机器存在）
 
-![img](https://cdn.nlark.com/yuque/0/2024/png/36082246/1708691624133-25fcd177-1949-4336-a748-dbd14511c687.png)
+![img](https://picx.zhimg.com/80/v2-2eb0bdc223d5c76043ce13cc7689cc0d.png)
 
 ```bash
 systemctl stop nvidia-persistenced.service
 ```
 
-![img](https://cdn.nlark.com/yuque/0/2024/png/36082246/1708691785307-7f61dc00-d373-4a7e-855a-d65f02e5c543.png)
+![img](https://picx.zhimg.com/80/v2-3df724365c9a4859a0dbe45ac5bad7b5.png)
 
 ```bash
 systemctl stop dcgm
@@ -258,7 +258,7 @@ systemctl stop nvidia-dcgm
 # sudo nv-hostengine -t
 ```
 
-![img](https://cdn.nlark.com/yuque/0/2024/png/36082246/1708691843452-8c7976b2-6b68-4c91-bcf3-3d138a57760f.png)
+![img](https://picx.zhimg.com/80/v2-da48adc1af6c02a63f4b379acf5434df.png)
 
 ```bash
 systemctl stop nvsm.service
@@ -294,3 +294,100 @@ sudo service lightdm start
 - [Linux 下的 CUDA 安装和使用指南](https://zhuanlan.zhihu.com/p/79059379)
 - [【Linux】安装CUDA 11.2 和 cuDNN 8.4.0并检查是否安装成功_linux查看cudnn是否安装成功-CSDN博客](https://blog.csdn.net/tangjiahao10/article/details/125227005)
 - [pytorch多gpu并行训练](https://zhuanlan.zhihu.com/p/86441879)
+
+
+
+
+
+## CUDA Installation
+
+\1) Download the latest [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1804&target_type=runfilelocal)
+
+**2) Switch to tty3 by pressing Ctl+Alt+F3**
+
+**3) Unload nvidia-drm before proceeding.**
+
+3a) Isolate multi-user.target
+
+```
+sudo systemctl isolate multi-user.target
+```
+
+3b) Note that nvidia-drm is currently in use.
+
+```
+lsmod | grep nvidia.drm
+```
+
+3c) Unload nvidia-drm
+
+```
+sudo modprobe -r nvidia-drm
+```
+
+4d) Note that nvidia-drm is not in use anymore.
+
+```
+lsmod | grep nvidia.drm
+```
+
+\5) Go to your download folder and run the cuda installation.
+
+```
+sudo sh cuda_10.1.168_418.67_linux.run
+```
+
+\6) Answer any prompts during installation.
+
+\7) When installation has finished, confirm that the CUDA Version has been updated.
+
+```
+nvidia-smi
+```
+
+\8) Start the GUI again.
+
+```
+sudo systemctl start graphical.target
+```
+
+https://neucrack.com/p/252
+
+https://gist.github.com/xaliander/2d7ffd6a662b0302fbe840c227cf7a4a
+
+https://unix.stackexchange.com/questions/440840/how-to-unload-kernel-module-nvidia-drm
+
+```
+sudo rmmod nvidia-uvm
+```
+
+```bash
+sudo lsof /dev/nvidia* | grep -v PID | grep -v lsof | awk '{print $2}' | xargs sudo kill -9
+```
+
+```bash
+sudo rmmod nvidia_drm
+sudo rmmod nvidia_modeset
+sudo rmmod nvidia_uvm
+sudo rmmod nvidia
+sudo lsof /dev/nvidia*
+lsmod | grep nvidia
+```
+
+```bash
+sudo service lightdm stop
+sudo stop nvidia-digits-server
+sudo service docker stop
+sudo rmmod nvidia-uvm
+```
+
+service nvidia-docker stop will also resolve it (if UVM is only used by nvidia-docker)
+
+https://blog.csdn.net/kuku123465/article/details/130250940
+
+
+
+export CUDA_HOME=/usr/local/cuda-11.8
+
+export PATH=/usr/local/cuda-11.8/bin:$PATH
+

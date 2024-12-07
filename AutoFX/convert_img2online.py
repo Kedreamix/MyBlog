@@ -7,7 +7,7 @@ from utils.update_hexo_kedreamix import control_blog
 
 from configs import keywords_dict, keep_subjects
 save_dir = os.path.join(root_path, time.strftime("%Y-%m-%d"))
-save_dir = os.path.join(root_path, "2024-11-20")
+save_dir = os.path.join(root_path, "2024-12-07")
 for key in keywords_dict.keys():
     key_name = check_filename(key)
     target_md = os.path.join(save_dir, f'{key_name}_abs.md')

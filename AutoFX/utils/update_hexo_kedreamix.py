@@ -86,77 +86,92 @@ def search_bg(md_file):
     return random_image_url
 
 def control_blog(title, path_md, daily = False):
+    """
+    根据提供的标题、Markdown文件路径和是否为日常更新来控制博客内容的生成和更新。
+
+    参数:
+    title (str): 博客文章的标题。
+    path_md (str): Markdown文件的路径，用于转换和生成博客内容。
+    daily (bool, optional): 是否为日常更新，默认为False。如果是日常更新，会在日期后添加'-daily'后缀。
+    """
+    # 获取当前日期并格式化，用于创建博客文件夹
     now = datetime.datetime.now().strftime("%Y-%m-%d")
-    # now = '2024-08-05'
+    # 如果是日常更新，在日期后添加'-daily'后缀
     if daily:
         now += '-daily'
+    # 检查并处理博客标题，确保标题的合法性
     filename = check_filename(title)
     # filename = os.path.join(check_filename(title), now)
     # 新建博客
     # print(os.path.join(root_blog, now))
+    # 创建博客文件夹和临时文件夹，如果已存在则不执行任何操作
     os.makedirs(os.path.join(root_blog, now), exist_ok=True)
     os.makedirs(temp_dir, exist_ok=True)
-    # target_path = os.path.join(root_blog, filename, f'crop_{check_filename(title)}')
-    # try:
-    #     if os.path.exists(target_path):
-    #         files = os.listdir(root_img)
-    #         for f in files:
-    #             if not os.path.exists(os.path.join(target_path, f)):
-    #                 shutil.copytree(os.path.join(root_img, f), os.path.join(target_path, f))
-    #     else:
-    #         shutil.copytree(root_img, target_path)
-    # except IOError as e:
-    #     print("Unable to copy file. %s" % e)
-    # except:
-    #     print("Unexpected error:", sys.exc_info())
-    # path_imgs = glob.glob(os.path.join(root_img, '*', '*.jpg'))
-    # if len(path_imgs) > 0:
-    #     bg_filename = str(int(time.time())) + '.jpg'
-    #     shutil.copyfile(path_imgs[0], os.path.join(root_blog_images, bg_filename))
-    #     path_bg = f'/images/{bg_filename}'
-    # else:
-    #     path_bg = '/images/bg.png'
 
     content = ''
+    # 组合路径以访问目标Markdown文件
     target_path_md = os.path.join(root_blog, now, filename + '.md')
+    # 如果目标Markdown文件已存在，则读取其内容并分割
     if os.path.exists(target_path_md):
         with open(target_path_md, 'r', encoding='utf-8') as f:
-            content = f.read()
+            content = f.read() # 读旧文件
             content = content.split('---')[2]
+    # 如果不是日常更新，则尝试转换图片格式以适配不同的平台
     if not daily:
         try:
             logger.info("Start Convert Images {}".format(path_md))
             try:
+                # 首先尝试使用'bili'模式转换图片
                 mode1 = 'bili'
-                convert_images(path_md, mode1)
-                new_file = os.path.join(temp_dir, f'New_{mode1}_{os.path.basename(path_md)}')
+                new_file = os.path.join(temp_dir, f'New_{mode1}_{os.path.basename(path_md)}_{now}')
+
+                if not os.path.exists(new_file): 
+                    convert_images(path_md, mode1)
+                else:
+                    convert_images(new_file, mode1)
+                    # logger.info("Already Convert Images {}".format(new_file))
+                
             except Exception as e:
+                # 如果转换失败，记录错误并尝试使用'csdn'模式转换图片
                 logger.error("write error {} {}".format(e,path_md))
                 mode1 = 'csdn'
+        
                 convert_images(path_md, mode1)
                 new_file = os.path.join(temp_dir, f'New_{mode1}_{os.path.basename(path_md)}')
+            # 更新Markdown文件路径为转换后的文件路径，并进一步转换图片格式为适配知乎平台
             path_md = new_file
-            convert_images(new_file, 'zhihu')
-            # os.remove(new_file)
-            path_md2 = os.path.join(temp_dir, f'New_zhihu_{os.path.basename(new_file)}')
+            path_md2 = os.path.join(temp_dir, f'New_zhihu_{os.path.basename(new_file)}_{now}')
+            if not os.path.exists(path_md2):
+                convert_images(new_file, 'zhihu')
+            else:
+                convert_images(path_md2, 'zhihu')
+                logger.info("Already Convert Images {}".format(path_md2))
+            # 搜索并获取博客背景图片路径
             path_bg = search_bg(path_md2)
             path_md = path_md2
         except Exception as e:
+            # 如果在图片转换过程中发生任何错误，记录错误并设置背景图片路径为空
             path_bg = ''
             logger.error("write error {} {}".format(e,path_md))
     else:
+        # 如果是日常更新，背景图片路径设置为空
         path_bg = ''
+    # 读取Markdown文件内容
     with open(path_md, 'r', encoding='utf-8') as f:
         text = f.read()
+        # 生成博客头部信息
         header = generate_header(title, path_bg, text)
         # print(header)
 
+        # 根据是否存在旧内容，组合生成最终的Markdown内容
         if content != '':
             md = header + '\n' + text + '\n' + content
         else:
             md = header + '\n' + text
+    # 将最终的Markdown内容写入目标文件
     with open(target_path_md, 'w', encoding='utf-8') as f:
         f.write(md)
+    print(f"Control Blog {title} {target_path_md}")
     # os.remove(path_md2)
 
     

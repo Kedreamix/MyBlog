@@ -92,7 +92,6 @@ class CSDNConvert(CSDN_config):
             except Exception as e:
                 flag = False
                 res_url = None
-                print("error", e)
                 time.sleep(5*(times+1))
             if flag or times > 5:
                 break
@@ -105,33 +104,37 @@ class ZHIHUConvert(ZHIHU_config):
     def __init__(self):
         if self.mode not in self.mode_dict:
             raise Exception(" You enter a not support picture mode!")
+    # 使用tenacity装饰器实现重试逻辑，配置指数退避等待时间和最大尝试次数
     @tenacity.retry(wait=tenacity.wait_exponential(multiplier=1, min=4,
-                                                   max=10),
+                                                max=10),
                     stop=tenacity.stop_after_attempt(5),
                     reraise=True)
     def convert(self, src):
+        """
+        尝试转换给定的源数据，并返回转换后的URL。
+
+        参数:
+        src: 源数据，需要转换的数据。
+
+        返回:
+        转换后的URL，如果转换失败则返回None。
+        """
+        # 更新请求所需的字段
         self.fields['url'] = src
+        # 创建multipart编码器，用于构建请求数据
         multipart_encoder = MultipartEncoder(fields=self.fields, boundary=self.boundary)
+        # 发送POST请求以进行转换
         res = requests.post(self.convert_url, data=multipart_encoder, cookies=self.cookies, headers=self.headers)
         
-        times = 0
-        flag = False
-        while True:
-            try:
-                times += 1
-                time.sleep(5)
-                # if request legal
-                if res.status_code != 200:
-                    raise Exception(res.json()['error']['message'])
-                res_url = res.json()[self.mode]
-                flag = True
-            except Exception as e:
-                flag = False
-                res_url = None
-                print("error", e)
-                time.sleep(30)
-            if flag or times > 5:
-                break
+        # 循环检查转换结果，直到成功或超过最大重试次数
+        try:
+            # if request legal
+            if res.status_code != 200:
+                raise Exception(res.json()['error']['message'])
+            res_url = res.json()[self.mode]
+        except Exception as e:
+            res_url = None
+            print("error", e)
         return res_url
 
 class BILIConvert(BILI_config):
@@ -204,11 +207,21 @@ class BOKEYUANConvert(BOKEYUAN_config):
         # if request legal
         res_url = res.json()['message']
         return res_url
-@tenacity.retry(wait=tenacity.wait_exponential(multiplier=1, min=4,
-                                                   max=10),
-                    stop=tenacity.stop_after_attempt(5),
-                    reraise=True)
+
 def img_convert(mode, text, root, link=False):
+    """
+    根据指定的平台模式将文本中的图片转换为在线链接或处理后的文本。
+    
+    参数:
+    - mode: str, 平台模式，例如 'zhihu', 'csdn' 等。
+    - text: str, 包含需要转换图片的文本。
+    - root: str, 文件操作的根目录。
+    - link: bool, 是否仅返回图片链接，默认为 False。
+    
+    返回:
+    - str, 转换后的文本或图片链接。
+    """
+    # 根据模式选择相应的平台转换器
     if mode == 'zhihu':
         handle = ZHIHUConvert()
     elif mode == 'csdn':
@@ -220,9 +233,10 @@ def img_convert(mode, text, root, link=False):
     elif mode == 'bokeyuan':
         handle = BOKEYUANConvert(root)
 
+    # 如果仅需要图片链接
     if link:
         res_url = handle.convert(text)
-        # if get available convert address
+        # 如果获取到有效的转换地址
         if res_url:
             print(f"-> {res_url}")
         else:
@@ -232,21 +246,26 @@ def img_convert(mode, text, root, link=False):
 
     else:
         res_text = ''
+        # 如果 example.md 存在，读取其内容作为初始转换文本
         if os.path.exists('example.md'):
             with open('example.md', 'r', encoding='utf-8') as f:
                 res_text += f.read()
         last_end = 0
+        # 查找文本中的所有模式并替换为转换后的图片
         for query in re.finditer(Setting_config.pattern, text, re.I):
             src = query.group()[2:-1]
             print(f"{src}", end=' ')
-            res_url = handle.convert(src)
-            # if get available convert address
-            if res_url:
-                print(f"-> {res_url}")
-            else:
-                print('Convert false!')
+            try:
+                res_url = handle.convert(src)
+                # 如果获取到有效的转换地址
+                if res_url:
+                    print(f"-> {res_url}")
+                else:
+                    res_url = src
+            except Exception as e:
+                print(f"转换出现问题: {e}，使用原始地址")
                 res_url = src
-            # change source file, then do another search
+            # 更改源文件，然后进行另一次搜索
             res_text += text[last_end:query.start() + 2] + res_url
             last_end = query.end() - 1
         res_text += text[last_end:]

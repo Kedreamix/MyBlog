@@ -294,14 +294,15 @@ sudo service lightdm start
 - [Linux 下的 CUDA 安装和使用指南](https://zhuanlan.zhihu.com/p/79059379)
 - [【Linux】安装CUDA 11.2 和 cuDNN 8.4.0并检查是否安装成功_linux查看cudnn是否安装成功-CSDN博客](https://blog.csdn.net/tangjiahao10/article/details/125227005)
 - [pytorch多gpu并行训练](https://zhuanlan.zhihu.com/p/86441879)
-
-
+- [基于ubuntu22.04系统安装nvidia A100驱动与NVLink启用](https://blog.csdn.net/kingredfly/article/details/137560894)
+- [https://developer.download.nvidia.com/compute/cuda/repos/](https://developer.download.nvidia.com/compute/cuda/repos/)
+- [CUDA initialization: Unexpected error from cudaGetDeviceCount解决方法](https://blog.51cto.com/lwm666/12218747)
 
 
 
 ## CUDA Installation
 
-\1) Download the latest [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1804&target_type=runfilelocal)
+**1)** Download the latest [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1804&target_type=runfilelocal)
 
 **2) Switch to tty3 by pressing Ctl+Alt+F3**
 

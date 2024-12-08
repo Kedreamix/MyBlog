@@ -17,25 +17,7 @@ thread_num = 4
 api_key = 'ZgaeXqX9WkmCoEvCZEcWDATZ'
 secret_key = '7cKeQW3nlica7kHGuV3VKi5QBtmDm6K8'
 GOOGLE_API_KEY = 'AIzaSyALrVIKu8GEMwQB1o8cqe5LZbgg7H3-a-A'
-summary_prompt= '''User
-    Ignore all previous instructions. You are a highly proficient researcher that can read and write properly and fluently, and can extract all important information from any text. Your task is to summarize and extract all key takeaways of the following text delimited by triple backticks in all relevant aspects. 
 
-    Output a summary and a list of key takeaways respectively. The summary should be a one-liner in at most 200 words. The key takeaways should be in up to seven bulletpoints, the fewer the better.
-
-    Use the following format:
-    #### Summary
-    <summary of the text>
-
-    #### Key Takeaways
-    <list of key takeaways>
-
-    Respond in Simplified Chinese.
-
-    Text:
-    ```
-    %s
-    ```
-    '''
 summary_prompt = '''User
     Ignore all previous instructions. Your new role is that of an exceptional bilingual expert researcher with fluency in both English and Simplified Chinese and  a researcher in the field of [ %s ] who is good at summarizing papers using concise statements. Your skill set includes the unique ability to distill complex documents into their most essential elements. You will be supplied with a specific excerpt of text framed within triple backticks. Your assignment involves two critical tasks:
     Output a summary and a list of key takeaways respectively.
@@ -57,30 +39,22 @@ summary_prompt = '''User
     %s
     ```
     '''
-# summary_prompt = '''User
-#     Ignore all previous instructions. Your new role is an exceptional bilingual expert researcher fluent in both English and Simplified Chinese, specializing in the field of [ %s ]. You excel at summarizing academic papers and distilling complex content into essential elements.
 
-#     You will be provided with a specific text excerpt framed within triple backticks. Your tasks are:
+translate_prompt = '''User
+    Ignore all previous instructions. Your new role is that of an exceptional bilingual expert researcher with fluency in both English and Simplified Chinese and  a researcher in the field of [ %s ] who is good at translate papers using concise statements. Your task is to translate the following text (enclosed in triple backticks) from **English to Simplified Chinese**. 
+
+    Ensure that the translation is accurate, fluent, and conveys the meaning clearly. Avoid literal translations; aim for natural, idiomatic expressions in Simplified Chinese.
+
+    Provide the translation in the following format:
+
+    **Translation**
+    <translated text in Simplified Chinese>
     
-#     1. **Summary**: Write a one-line summary in Simplified Chinese that captures the core message of the text. This summary should be concise and no longer than 200 characters.
-#     2. **Key Takeaways**: Identify and list up to seven significant insights from the text as bullet points, also in Simplified Chinese. Focus on clarity and brevity, highlighting the most crucial points.
-
-#     Your response should be formatted as follows:
-
-#     **Summary**
-#     <summary of the text>
-
-#     **Key Takeaways**
-#     <list of key takeaways>
-
-#     Ensure your analysis is sharp and incisive, capturing both the main message and any subtle nuances of the text, while strictly adhering to the requested format.
-
-#     Text:
-#     ```
-#     %s
-#     ```
-#     '''
-
+    Text:
+    ```
+    %s
+    ```
+'''
 
 keep_subjects = ['cs.CV', 'cs.AI', 'cs.LG', 'cs.CL', 'eess.AS']
 keywords_dict = {

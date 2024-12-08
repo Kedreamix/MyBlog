@@ -5,8 +5,7 @@ import google.generativeai as genai
 import time
 # from chatpaperfree import Paper, Reader
 from chat_paper import Paper, Reader
-from configs import GOOGLE_API_KEY, summary_prompt, proxy_gpt
-import random
+from configs import *
 import tenacity
 import g4f
 import json, requests
@@ -25,41 +24,17 @@ def check_filename(title):
         pdfname = pdfname[:125]
     return pdfname
 
-# def chatpaper_summary(file, p=1, temperature=0.5):
-#     text = '''Abstract,Introduction,Related Work,Background,Preliminary,Problem Formulation,Methods,Methodology,Method,Approach,Approaches,Materials and Methods,Experiment Settings,Experiment,Experimental Results,Evaluation,Experiments,Results,Findings,Data Analysis,Discussion,Results and Discussion,Conclusion,References'''
-#     section_list = text.split(',')
-#     paper_list = [Paper(path=file, sl=section_list)]
-#     # 创建一个Reader对象
-#     api_key_list = ['AIzaSyDwlS-8OQvtPlwsGxZetRosm8Gebp342Vk',
-#                     ]
-#     if random.random() < 0.5:
-#         api_key_list = api_key_list[::-1]
-#     random.shuffle(api_key_list)
-#     reader = Reader(api_keys=api_key_list,
-#                     model_name='gemini-Pro',
-#                     p=p,
-#                     temperature=temperature)
-#     sum_info, cost = reader.summary_with_chat(
-#         paper_list=paper_list)  # type: ignore  
-#     return sum_info 
 
 def chatpaper_summary(file):
-    # if sort == 'Relevance':
-    #     sort = arxiv.SortCriterion.Relevance
-    # elif sort == 'LastUpdatedDate':
-    #     sort = arxiv.SortCriterion.LastUpdatedDate
-    # else:
-    #     sort = arxiv.SortCriterion.Relevance
-    paper_list = []
-    paper_list.append(Paper(path=file))
-    reader1 = Reader(key_word="",
+    paper_list = [Paper(path=file)]
+    reader = Reader(key_word="",
                          query="",
                          filter_keys="",
                         #  chatgpt_model='gpt-3.5-turbo',
                         chatgpt_model="ernie"
                          )
-    reader1.show_info()
-    sum_info = reader1.summary_with_chat(paper_list=paper_list)
+    reader.show_info()
+    sum_info = reader.summary_with_chat(paper_list=paper_list)
     return sum_info
     
 def set_detail(summary, content):
@@ -104,156 +79,123 @@ def get_access_token(api_key, secret_key):
 from configs import api_key, secret_key
 access_token = get_access_token(api_key, secret_key)
 
-@tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
-                    stop=tenacity.stop_after_attempt(10),
-                    reraise=True)
-def gpt_gen(prompt, method='chatglm', key_name=''):
-    if method=='chatgpt':
-        messages = [{'role': 'user','content': prompt},]
-        
-        message = summary_prompt % (key_name, prompt)
-        messages = [{'role': 'user','content': message},]
 
-        answer = gpt_35_api_stream(messages)
-        response = answer[2]['content']
-        
-        return response
+def validate_result(result, task_type='summary', custom_keywords=None):
+    """
+    验证结果中是否包含指定关键字，并返回不包含关键字的部分.
+
+    :param result: 待验证的文本结果
+    :param task_type: 任务类型 ('summary' 或 'translate')
+    :param custom_keywords: 自定义关键词列表（可选）
+    :return: 不包含关键字的部分文本
+    :raises Exception: 如果未找到匹配的关键词
+    """
+
+    # 设置关键词列表
+    if custom_keywords is not None:
+        keywords = custom_keywords
+    elif task_type == 'summary':
+        keywords = ['**Summary', 'Summary', '总结', '摘要', '**摘要', '**总结']
+    elif task_type == 'translate':
+        keywords = ['**Translation', 'Translation', '翻译', '译文', '**译文', '**翻译']
+    else:
+        raise ValueError(f"Unknown task_type: {task_type}")
+
+    # 检查关键词是否存在
+    if not any(keyword in result for keyword in keywords):
+        logger.error(f"Error: did not find expected keywords in result. Task: {task_type}, Result: {result}")
+        raise Exception(f"{task_type} error: Keywords not found")
+
+    # 动态匹配关键词，并排除关键词本身
+    keyword_pattern = '|'.join(re.escape(kw) for kw in keywords)
+    match = re.search(rf'\*?\*?(?:{keyword_pattern})(.*)', result, re.DOTALL)
+
+    if match:
+        if task_type == 'translate':
+            # 返回不包含关键词的部分
+            return match.group(1).strip().strip('*').strip('\n')
+        else:
+            return match.group()
+    else:
+        logger.error(f"Error: failed to parse {task_type} result: {result}")
+        raise Exception(f"{task_type} parsing error")
+
+
+@tenacity.retry(
+    wait=tenacity.wait_exponential(multiplier=3, min=4, max=40),
+    stop=tenacity.stop_after_attempt(10),
+    reraise=True
+)
+def gpt_gen(system_prompt, prompt, method='chatglm', key_name=''):
+    # 
+    result = None
+    message = system_prompt % (key_name, prompt)
+
+    if method == 'chatgpt':
+        messages = [{'role': 'user', 'content': message}]
+        response = gpt_35_api_stream(messages)
+        result = response[2]['content']
+
     elif method == 'gpt4free':
         from g4f.client import Client
-        message = summary_prompt % (key_name, prompt)
         messages = [
-            {"role": "system",
-             "content": "You are a researcher in the field of [" + key_name + "] who is good at summarizing papers using concise statements"},
-            {'role': 'user','content': message},]
+            {"role": "system", "content": f"You are a researcher in the field of [{key_name}] who is good at summarizing papers using concise statements"},
+            {'role': 'user', 'content': message}
+        ]
         client = Client()
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages = messages,
+            messages=messages,
             provider=g4f.Provider.Liaobots
         )
         result = response.choices[0].message.content
+
     elif method == 'ernie':
-        message = summary_prompt % (key_name, prompt)
         url = f"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie-speed-128k?access_token={access_token}"
-        # message_content = messages[1]['content'] + messages[2]['content']
         payload = json.dumps({
-            "messages": [
-                {
-                    "role": "user",
-                    "content": message
-                }
-            ],
-            "system": "You are a researcher in the field of [" + key_name + "] who is good at summarizing papers using concise statements"
-            })
+            "messages": [{"role": "user", "content": message}],
+            "system": f"You are a researcher in the field of [{key_name}] who is good at summarizing papers using concise statements"
+        })
         headers = {'Content-Type': 'application/json'}
-        
         response = requests.post(url, headers=headers, data=payload)
-        response_json = response.json()
-        result = response_json['result']
-    elif method == 'gemini':
-        message = summary_prompt % (key_name, prompt)
-        os.environ['https_proxy'] = proxy_gpt['https']
-        os.environ['http_proxy'] = proxy_gpt['http']
-        genai.configure(api_key=GOOGLE_API_KEY)
-        safety_settings = [
-            {
-                "category": "HARM_CATEGORY_HARASSMENT",
-                "threshold": "BLOCK_NONE"
-            },
-            {
-                "category": "HARM_CATEGORY_HATE_SPEECH",
-                "threshold": "BLOCK_NONE"
-            },
-            {
-                "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                "threshold": "BLOCK_NONE"
-            },
-            {
-                "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                "threshold": "BLOCK_NONE"
-            }
-        ]
-        times = 0
-        flag = False
-        while True:
-            try:
-                times += 1
-                print("Try times", times)
-                model = genai.GenerativeModel('gemini-pro', 
-                                              safety_settings=safety_settings)
-                response = model.generate_content(message)
-                # response = response.text
-                flag = True
-            except Exception as e:
-                time.sleep(5)
-                print("error", e)
-                flag = False
-            
-            if times > 5 or flag:
-                break
-                
-                
-        result = response.text
+        result = response.json().get('result', '')
+
     elif method == 'chatglm':
-        message = summary_prompt % (key_name, prompt)
         messages = [
-            {"role": "system",
-             "content": "You are a researcher in the field of [" + key_name + "] who is good at summarizing papers using concise statements"},
-            {'role': 'user','content': message},]
-        from zhipuai import ZhipuAI
-        client = ZhipuAI(api_key="52540d82a6e27215c12fa262724a5a12.HNZqSwjBWTuEtHuQ") # 填写您自己的APIKey
+            {"role": "system", "content": f"You are a researcher in the field of [{key_name}] who is good at summarizing papers using concise statements"},
+            {'role': 'user', 'content': message}
+        ]
+        client = ZhipuAI(api_key="your_api_key_here")
         response = client.chat.completions.create(
-            model="glm-4-flash",  # 填写需要调用的模型编码
-            messages = messages,
+            model="glm-4-flash",
+            messages=messages
         )
-        response = response.choices[0].message.content
-        if 'sorry' in response:
-            raise Exception("chatglm error")
-        result = response
-        if not any(keywork not in result for keywork in ['**Summary', 'Summary', '总结', '摘要', '**摘要', '**总结']):
-            logger.error(f"error, didn't find Summary {result}")
-            raise Exception("chatglm error")
+        result = response.choices[0].message.content
 
-        # match = re.search(r'\*\*Summary(.*)', result, re.DOTALL)
-        # 合并对 "Summary"、"总结" 和 "摘要" 以及其加粗形式的匹配
-        match = re.search(r'\*?\*?(?:Summary|总结|摘要).*', result, re.DOTALL)
+    if 'sorry' in result.lower():
+        raise Exception(f"{method} error: 'sorry' found in response")
 
-        if match:
-            return match.group()
-        else:
-            logger.error(f"error, didn't find **Summary** {result}")
-            raise Exception("summary error")
-    
-    if 'sorry' in result:
-        raise Exception("llm error")
-    
-    if not any(keywork not in result for keywork in ['**Summary', 'Summary', '总结', '摘要', '**摘要', '**总结']):
-        logger.error(f"error, didn't find Summary {result}")
-        raise Exception("llm error")
-
-    match = re.search(r'\*?\*?(?:Summary|总结|摘要).*', result, re.DOTALL)
-
-    if match:
-        return match.group()
+    if 'translate' in system_prompt.lower():
+        return validate_result(result, task_type='translate')
     else:
-        logger.error(f"error, didn't find **Summary** {result}")
-        raise Exception("summary error")
+        return validate_result(result, task_type='summary')
+
 @tenacity.retry(wait=tenacity.wait_exponential(multiplier=2, min=4, max=20),  # 增加 multiplier 和 max
                     stop=tenacity.stop_after_attempt(10),
                     reraise=True)
 def typing(item, img_dir, key_name, daily=False):
     url_id, updated, published, title, summary, authors, categorys, comments = item
-    # print(item)
     auth = ''
     for a in authors:
         auth = auth + a + ', '
     auth = auth[:-2]
-    try:
-        gptsummary1 = gpt_gen(summary, 'chatglm', key_name)
-    except:
-        gptsummary1 = gpt_gen(summary, 'ernie', key_name)
+    
+    gpt_translate = gpt_gen(translate_prompt, summary, 'ernie', key_name)
 
-    logger.info("gptsummary1:\n{}".format(gptsummary1))
+    gpt_summary = gpt_gen(summary_prompt, summary, 'ernie', key_name)
+
+
+    # logger.info("gptsummary1:\n{}".format(gptsummary1))
     if daily:
         save_dir = os.path.join(root_path, time.strftime("%Y-%m-%d") + '-daily')
     else:
@@ -265,7 +207,7 @@ def typing(item, img_dir, key_name, daily=False):
 
     if not daily:        
         gptsummary2 = chatpaper_summary(save_path)
-        logger.info("gptsummary2:\n{}".format(gptsummary2))
+        # logger.info("gptsummary2:\n{}".format(gptsummary2))
             
 
     # time.sleep(5)
@@ -278,9 +220,13 @@ def typing(item, img_dir, key_name, daily=False):
 
 {summary.lstrip()}
 
+>{gpt_translate}
+
+**论文及项目相关链接**
+
 [PDF]({url_id}) {comments[0] if len(comments) > 0 else ''}
 
-{gptsummary1}
+{gpt_summary}
 
 {img}
 
@@ -295,9 +241,13 @@ def typing(item, img_dir, key_name, daily=False):
 
 {summary.lstrip()}
 
+>{gpt_translate}
+
+**论文及项目相关链接**
+
 [PDF]({url_id}) {comments[0] if len(comments) > 0 else ''}
 
-{gptsummary1}
+{gpt_summary}
 
 **[ChatPaperFree](https://huggingface.co/spaces/Kedreamix/ChatPaperFree)**
 
